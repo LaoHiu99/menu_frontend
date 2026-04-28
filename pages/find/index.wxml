@@ -1,0 +1,67 @@
+<!-- pages/find/index.wxml -->
+<view class="nav-placeholder" style="height: {{navBarHeight}}px;"></view>
+<view class="container">
+  <view class="header-section">
+    <image class="header-dog" src="/images/dog1.png" mode="aspectFit" />
+    <view class="header-title">发现美好</view>
+    <view class="header-subtitle">和线条小狗一起探索日常</view>
+  </view>
+
+  <view class="daily-mood">
+    <view class="mood-header">
+      <view class="mood-icon">✨</view>
+      <view class="mood-title">今日心情</view>
+    </view>
+    <view class="mood-content">
+      <image class="mood-dog" src="/images/dog2.png" mode="aspectFit" />
+      <view class="mood-text">{{currentMood.text}}</view>
+    </view>
+    <view class="mood-paws">🐾 🐾 🐾</view>
+  </view>
+
+  <view class="dog-quote">
+    <view class="quote-icon">💭</view>
+    <view class="quote-text">{{dailyQuote}}</view>
+    <view class="quote-author">—— 线条小狗</view>
+  </view>
+
+  <view class="section-title">
+    <view class="title-paw">🐾</view>
+    <view class="title-text">小狗日记</view>
+  </view>
+
+  <scroll-view class="diary-scroll" scroll-y show-scrollbar="{{false}}">
+    <view class="diary-card" wx:for="{{diaryList}}" wx:key="id">
+      <view class="diary-header">
+        <image class="diary-dog" src="/images/dog4.png" mode="aspectFit" />
+        <view class="diary-date">{{item.date}}</view>
+      </view>
+      <view class="diary-content">{{item.content}}</view>
+      <view class="diary-footer">
+        <view class="diary-paws">🐾🐾🐾</view>
+        <view class="diary-like" bindtap="onLikeDiary" data-id="{{item.id}}">
+          <view class="like-icon">{{item.liked ? '❤️' : '🤍'}}</view>
+          <view class="like-count">{{item.likeCount}}</view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="section-title">
+    <view class="title-paw">🐾</view>
+    <view class="title-text">趣味小知识</view>
+  </view>
+
+  <view class="facts-grid">
+    <view class="fact-card" wx:for="{{funFacts}}" wx:key="id" bindtap="onTapFact" data-index="{{index}}">
+      <view class="fact-icon">{{item.icon}}</view>
+      <view class="fact-title">{{item.title}}</view>
+      <view class="fact-preview">{{item.preview}}</view>
+    </view>
+  </view>
+
+  <view class="dog-stamp">
+    <image class="stamp-dog" src="/images/dog3.png" mode="aspectFit" />
+    <view class="stamp-text">线条小狗认证</view>
+  </view>
+</view>

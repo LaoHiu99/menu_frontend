@@ -1,0 +1,51 @@
+<!-- pages/my/index.wxml -->
+<view class="nav-placeholder" style="height: {{navBarHeight}}px;"></view>
+<view class="container">
+  <view class="profile-section">
+    <image class="profile-dog" src="/images/avator.png" mode="aspectFit" />
+    <view class="profile-info">
+      <view class="profile-name">{{userInfo.name}}</view>
+      <view class="profile-id">ID: {{userInfo.userId}}</view>
+    </view>
+    <view class="profile-badge">
+      <view class="badge-icon">🏆</view>
+      <view class="badge-text">忠实粉丝</view>
+    </view>
+  </view>
+
+  <view class="stats-section">
+    <view class="stat-item">
+      <text class="stat-num">{{stats.orders}}</text>
+      <text class="stat-label">订单</text>
+    </view>
+  </view>
+
+  <view class="menu-section">
+    <view class="section-title">
+      <view class="title-paw">🐾</view>
+      <view class="title-text">我的服务</view>
+    </view>
+    
+    <view class="menu-grid">
+      <view class="menu-item" bindtap="onTapMenu" data-id="{{item.id}}" wx:for="{{menuItems}}" wx:key="id">
+        <view class="menu-icon">{{item.icon}}</view>
+        <view class="menu-name">{{item.name}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="dog-quote-section">
+    <image class="quote-dog" src="/images/dog4.png" mode="aspectFit" />
+    <view class="quote-text">{{dailyQuote}}</view>
+  </view>
+
+  <view class="logout-btn" bindtap="onLogout">
+    <view class="logout-text">退出登录</view>
+  </view>
+
+  <view class="footer-paws">
+    <view class="footer-paw">🐾</view>
+    <view class="footer-text">线条小狗陪你每一天</view>
+    <view class="footer-paw">🐾</view>
+  </view>
+</view>

@@ -1,0 +1,47 @@
+<view class="container" style="padding-top: {{navBarHeight}}px;">
+  <!-- 自定义导航栏（固定定位） -->
+  <view class="custom-nav" style="height: {{navBarHeight}}px;">
+    <!-- 返回按钮 - 与胶囊按钮对齐 -->
+    <view class="header-back" 
+          style="top: {{capsuleTop}}px; height: {{capsuleHeight}}px; line-height: {{capsuleHeight}}px;"
+          bindtap="onGoBack">
+      <text class="back-text">‹</text>
+    </view>
+    
+    <!-- 标题 - 与胶囊按钮对齐 -->
+    <view class="header-title" 
+          style="top: {{capsuleTop}}px; height: {{capsuleHeight}}px; line-height: {{capsuleHeight}}px;">
+      下单
+    </view>
+  </view>
+
+  <!-- 页面主要内容 -->
+  <view class="order-goods">
+    <view class="section-title">已选商品</view>
+    <view class="goods-list">
+      <view class="goods-item" wx:for="{{cartList}}" wx:key="id">
+        <image class="goods-image" src="{{item.image}}" mode="aspectFill" />
+        <view class="goods-info">
+          <view class="goods-name">{{item.name}}</view>
+          <view class="goods-count">x{{item.count}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="remark-section">
+    <view class="section-title">备注</view>
+    <textarea 
+      class="remark-input" 
+      placeholder="请输入备注信息（如：少辣、多加葱等）" 
+      value="{{remark}}" 
+      bindinput="onRemarkInput" 
+      maxlength="200"
+    />
+    <view class="remark-count">{{remark.length}}/200</view>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="submit-btn" bindtap="onSubmitOrder">提交订单</view>
+  </view>
+</view>

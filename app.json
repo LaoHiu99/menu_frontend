@@ -1,0 +1,49 @@
+{
+  "pages": [
+    "pages/recipe/index",
+    "pages/order/index",
+    "pages/order-confirm/index",
+    "pages/find/index",
+    "pages/my/index"
+  ],
+  "window": {
+    "backgroundColor": "#F6F6F6",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#F6F6F6",
+    "navigationBarTitleText": "电子菜单",
+    "navigationBarTextStyle": "black",
+    "navigationStyle": "custom"
+  },
+  "tabBar": {
+    "selectedColor": "#f3ca7e",
+    "list": [
+      {
+        "pagePath": "pages/recipe/index",
+        "text": "菜谱",
+        "iconPath": "images/icons/recipe.png",
+        "selectedIconPath": "images/icons/recipe-active.png"
+      },
+      {
+        "pagePath": "pages/order/index",
+        "text": "订单",
+        "iconPath": "images/icons/order.png",
+        "selectedIconPath": "images/icons/order-active.png"
+      },
+      {
+        "pagePath": "pages/find/index",
+        "text": "发现",
+        "iconPath": "images/icons/find.png",
+        "selectedIconPath": "images/icons/find-active.png"
+      },
+      {
+        "pagePath": "pages/my/index",
+        "text": "我的",
+        "iconPath": "images/icons/my.png",
+        "selectedIconPath": "images/icons/my-active.png"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

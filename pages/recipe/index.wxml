@@ -1,0 +1,152 @@
+<view class="container">
+    <view class="dog-paw-decoration paw-1">🐾</view>
+    <view class="dog-paw-decoration paw-2">🐾</view>
+    <view class="dog-paw-decoration paw-3">🐾</view>
+    
+    <image class="header-image" src="/images/icons/header.jpg" mode="aspectFill" />
+    <view class="recipe-body">
+      <view class="dog-ear-decoration"></view>
+  
+    <view class="body-top">
+      <image class="avator" src="/images/icons/avator.jpg" mode="aspectFill" />
+      <view class="content">
+        <view class="title">电子菜单</view>
+        <view class="number">共2人</view>
+      </view>
+    </view>
+
+    <view class="notice">公告: 暂无</view>
+
+    <view class="search-bar">
+      <image class="search-icon" src="/images/icons/search.png" mode="aspectFit" />
+      <input class="search-input" placeholder="搜索菜品名称" value="{{searchKeyword}}" bindinput="onSearchInput" bindconfirm="onSearch" />
+      <image wx:if="{{searchKeyword}}" class="search-clear" src="/images/icons/delete.png" mode="aspectFit" bindtap="onClearSearch" />
+      <view class="search-dog-paw">🐾</view>
+    </view>
+
+    <view class="main-content" style="height: {{mainContentHeight}}px;">
+
+      <scroll-view class="sidebar-scroll" scroll-y show-scrollbar="{{false}}" wx:if="{{!isSearching}}">
+        <van-sidebar active-key="{{ activeKey }}" bind:change="onChange">
+          <van-sidebar-item wx:for="{{categories}}" wx:key="id" title="{{item.title}}" />
+          <view style="height: 170rpx;"></view>
+        </van-sidebar>
+      </scroll-view>
+
+      <scroll-view class="content-scroll" scroll-y>
+        <view class="category-title" wx:if="{{!isSearching}}">{{categories[activeKey].title}}({{contentList[activeKey].items.length}})</view>
+        <view class="category-title" wx:if="{{isSearching}}">搜索结果({{searchResults.length}})</view>
+        <view class="content-area">
+          <view wx:if="{{isSearching}}">
+            <view wx:for="{{searchResults}}" wx:key="index" class="content-item">
+              <image class="item-image" src="/images/icons/header.jpg" mode="aspectFill" />
+              <view class="item-info">
+                <view class="item-title">{{item.name}}</view>
+                <view class="item-desc">分类: {{item.categoryTitle}}</view>
+                <view class="item-paws">🐾🐾🐾🐾🐾</view>
+                <view class="item-bottom">
+                  <view class="item-price">
+                    <text class="paw-icon">🐶</text>
+                    <text class="price-num">  0</text>
+                  </view>
+                  <image 
+                    class="item-add" 
+                    id="add-search-{{index}}"
+                    src="/images/icons/add.png" 
+                    mode="aspectFit" 
+                    bindtap="onAddSearchResultToCart"
+                    data-index="{{index}}"
+                    data-category-index="{{item.categoryIndex}}"
+                    data-item-index="{{item.itemIndex}}"
+                  />
+                </view>
+              </view>
+            </view>
+            <view wx:if="{{searchResults.length === 0}}" class="search-empty">
+              <view class="search-empty-dog">🐶</view>
+              <image class="search-empty-icon" src="/images/icons/search.png" mode="aspectFit" />
+              <view class="search-empty-text">未找到相关菜品</view>
+              <view class="search-empty-paw">🐾 🐾 🐾</view>
+            </view>
+          </view>
+          <view wx:for="{{contentList[activeKey].items}}" wx:key="*this" class="content-item" wx:if="{{!isSearching}}">
+            <image class="item-image" src="/images/icons/header.jpg" mode="aspectFill" />
+            <view class="item-info">
+              <view class="item-title">{{item}}</view>
+              <view class="item-desc">我会踩着七彩祥云来接你</view>
+              <view class="item-paws">🐾🐾🐾🐾🐾</view>
+              <view class="item-bottom">
+                <view class="item-price">
+                  <text class="paw-icon">💰</text>
+                  <text class="price-num">  0</text>
+                </view>
+                <image 
+                  class="item-add" 
+                  id="add-{{activeKey}}-{{index}}"
+                  src="/images/icons/add.png" 
+                  mode="aspectFit" 
+                  bindtap="onAddToCart"
+                  data-index="{{index}}"
+                />
+              </view>
+            </view>
+          </view>
+        </view>
+        <view style="height: 170rpx;"></view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <image class="fly-ball" 
+         wx:if="{{showFlyBall}}" 
+         src="/images/icons/dog.png"
+         mode="aspectFit"
+         style="left: {{flyBallStartX - 25}}px; top: {{flyBallStartY - 25}}px;"
+         animation="{{flyAnimation}}"></image>
+
+  <view class="bottom-bar">
+    <view class="cart-box" bindtap="onOpenCartPopup">
+      <image class="cart-icon" src="{{cartTotalCount > 0 ? '/images/icons/shoppingCar-active.png' : '/images/icons/shoppingCar.png'}}" mode="aspectFit" />
+      <view class="cart-badge" wx:if="{{cartTotalCount > 0}}">{{cartTotalCount}}</view>
+    </view>
+    <view class="order-btn {{cartTotalCount > 0 ? 'active' : ''}}" bindtap="onGoToOrderConfirm">下单</view>
+  </view>
+
+  <van-popup
+    show="{{ showCartPopup }}"
+    position="bottom"
+    round
+    bind:close="onCloseCartPopup"
+  >
+    <view class="popup-content">
+        <view class="popup-header">
+          <view class="popup-title">
+            已选菜品
+          </view>
+          <view class="popup-clear" bindtap="onClearCart">
+            <image class="clear-icon" src="/images/icons/delete.png" mode="aspectFit" />
+            <text>清空购物车</text>
+          </view>
+        </view>
+      <scroll-view class="cart-list" scroll-y show-scrollbar="{{false}}">
+        <view class="cart-item" wx:for="{{cartList}}" wx:key="id">
+          <image class="cart-item-image" src="{{item.image}}" mode="aspectFill" />
+          <view class="cart-item-info">
+            <view class="cart-item-name">{{item.name}}</view>
+            <view class="cart-item-price">¥{{item.price}}</view>
+          </view>
+          <view class="cart-item-stepper">
+            <image class="stepper-btn minus" src="/images/icons/reduce.png" mode="aspectFit" bindtap="onReduce" data-id="{{item.id}}" />
+            <view class="stepper-num">{{item.count}}</view>
+            <image class="stepper-btn plus" src="/images/icons/add.png" mode="aspectFit" bindtap="onAdd" data-id="{{item.id}}" />
+          </view>
+        </view>
+        <view class="cart-empty" wx:if="{{!cartList || cartList.length === 0}}">
+          <view>暂无商品</view>
+          <view class="cart-empty-paw">🐾 🐾 🐾</view>
+        </view>
+      </scroll-view>
+    </view>
+  </van-popup>
+
+</view>

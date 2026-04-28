@@ -1,0 +1,201 @@
+/* pages/order/order.wxss */
+
+page {
+  background-color: #fef9f3;
+}
+
+.container {
+  background-color: #fef9f3;
+  padding-bottom: 150rpx;
+  position: relative;
+}
+
+.custom-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #fff;
+  z-index: 100;
+  border-bottom: 2rpx dashed #e8d5c4;
+}
+
+/* 返回按钮 - 精确对齐胶囊按钮 */
+.header-back {
+  position: absolute;
+  left: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 101;
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background-color: #fff5eb;
+  border: 2rpx solid #f5e6d8;
+}
+
+.back-text {
+  font-size: 48rpx;
+  font-weight: 400;
+  color: #8b6f47;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 标题 - 精确对齐胶囊按钮 */
+.header-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #8b6f47;
+  pointer-events: none;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 2rpx;
+}
+
+/* ========== 原有样式 ========== */
+.order-goods {
+  background-color: #fff;
+  margin: 24rpx;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  border: 2rpx solid #f5e6d8;
+  box-shadow: 0 4rpx 16rpx rgba(139, 111, 71, 0.08);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #8b6f47;
+  margin-bottom: 24rpx;
+  display: flex;
+  align-items: center;
+}
+
+.section-title::before {
+  content: '🐾';
+  margin-right: 12rpx;
+  font-size: 28rpx;
+}
+
+.goods-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.goods-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  background-color: #fef9f3;
+  border-radius: 16rpx;
+  border: 2rpx dashed #f0e0d0;
+}
+
+.goods-item:last-child {
+  margin-bottom: 0;
+}
+
+.goods-image {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 20rpx;
+  flex-shrink: 0;
+  margin-right: 24rpx;
+  border: 2rpx solid #f5e6d8;
+}
+
+.goods-info {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.goods-name {
+  font-size: 30rpx;
+  color: #6b5637;
+  flex: 1;
+  font-weight: 500;
+}
+
+.goods-count {
+  font-size: 28rpx;
+  color: #a0845e;
+  margin-left: 20rpx;
+  background-color: #fff5eb;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  font-weight: 500;
+}
+
+.remark-section {
+  background-color: #fff;
+  margin: 24rpx;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  border: 2rpx solid #f5e6d8;
+  box-shadow: 0 4rpx 16rpx rgba(139, 111, 71, 0.08);
+}
+
+.remark-input {
+  width: 100%;
+  min-height: 200rpx;
+  padding: 24rpx;
+  background-color: #fef9f3;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  color: #6b5637;
+  box-sizing: border-box;
+  border: 2rpx dashed #f0e0d0;
+}
+
+.remark-count {
+  font-size: 24rpx;
+  color: #a0845e;
+  text-align: right;
+  margin-top: 12rpx;
+}
+
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24rpx 40rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  background-color: #fff;
+  box-shadow: 0 -4rpx 20rpx rgba(139, 111, 71, 0.1);
+  border-top: 2rpx dashed #f0e0d0;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 90rpx;
+  background-color: #f3ca7e;
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 600;
+  border-radius: 45rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3rpx solid #e8b86d;
+  box-shadow: 0 6rpx 16rpx rgba(243, 202, 126, 0.4);
+  letter-spacing: 4rpx;
+}
+
+.submit-btn:active {
+  opacity: 0.9;
+  transform: scale(0.98);
+}

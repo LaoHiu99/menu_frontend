@@ -1,0 +1,12 @@
+{
+  "name": "dianzicaidan",
+  "version": "1.0.0",
+  "description": "电子菜单小程序",
+  "main": "app.js",
+  "scripts": {},
+  "dependencies": {
+    "@vant/weapp": "^1.11.7"
+  },
+  "author": "",
+  "license": "ISC"
+}

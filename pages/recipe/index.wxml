@@ -28,13 +28,13 @@
       </scroll-view>
       <scroll-view class="content-scroll" scroll-y>
         <view class="category-title" wx:if="{{!isSearching}}">
-          {{categories[activeKey].title}}({{contentList[activeKey].items.length}})
+          {{categories[activeKey].title}}({{contentList[activeKey].items ? contentList[activeKey].items.length : 0}})
         </view>
         <view class="category-title" wx:if="{{isSearching}}">搜索结果({{searchResults.length}})</view>
         <view class="content-area">
           <view wx:if="{{isSearching}}">
-            <view wx:for="{{searchResults}}" wx:key="index" class="content-item">
-              <image class="item-image" src="/images/icons/header.jpg" mode="aspectFill" />
+            <view wx:for="{{searchResults}}" wx:key="id" class="content-item">
+              <image class="item-image" src="{{item.imageUrl || '/images/icons/header.jpg'}}" mode="aspectFill" />
               <view class="item-info">
                 <view class="item-title">{{item.name}}</view>
                 <view class="item-desc">分类: {{item.categoryTitle}}</view>
@@ -42,29 +42,28 @@
                 <view class="item-bottom">
                   <view class="item-price">
                     <text class="paw-icon">🐶</text>
-                    <text class="price-num">0</text>
+                    <text class="price-num">{{item.price}}</text>
                   </view>
                   <image class="item-add" id="add-search-{{index}}" src="/images/icons/add.png" mode="aspectFit" bindtap="onAddSearchResultToCart" data-index="{{index}}" data-category-index="{{item.categoryIndex}}" data-item-index="{{item.itemIndex}}" />
                 </view>
               </view>
             </view>
             <view wx:if="{{searchResults.length === 0}}" class="search-empty">
-              <view class="search-empty-dog">🐶</view>
-              <image class="search-empty-icon" src="/images/icons/search.png" mode="aspectFit" />
+              <image class="search-empty-icon" src="/images/jiazai.png" mode="aspectFit" />
               <view class="search-empty-text">未找到相关菜品</view>
               <view class="search-empty-paw">🐾 🐾 🐾</view>
             </view>
           </view>
-          <view wx:for="{{contentList[activeKey].items}}" wx:key="*this" class="content-item" wx:if="{{!isSearching}}">
-            <image class="item-image" src="/images/icons/header.jpg" mode="aspectFill" />
+          <view wx:for="{{contentList[activeKey].items}}" wx:key="id" class="content-item" wx:if="{{!isSearching}}">
+            <image class="item-image" src="{{item.imageUrl || '/images/icons/header.jpg'}}" mode="aspectFill" />
             <view class="item-info">
-              <view class="item-title">{{item}}</view>
-              <view class="item-desc">我会踩着七彩祥云来接你</view>
+              <view class="item-title">{{item.name}}</view>
+              <view class="item-desc">{{item.description || '美味佳肴，不容错过'}}</view>
               <view class="item-paws">🐾🐾🐾🐾🐾</view>
               <view class="item-bottom">
                 <view class="item-price">
                   <text class="paw-icon">💰</text>
-                  <text class="price-num">0</text>
+                  <text class="price-num">{{item.price}}</text>
                 </view>
                 <image class="item-add" id="add-{{activeKey}}-{{index}}" src="/images/icons/add.png" mode="aspectFit" bindtap="onAddToCart" data-index="{{index}}" />
               </view>

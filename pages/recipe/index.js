@@ -1,4 +1,8 @@
 // pages/recipe/index.js
+const api = require('../../utils/api');
+
+let searchTimer = null;
+
 Page({
   data: {
     showCartPopup: false,
@@ -11,42 +15,9 @@ Page({
     searchKeyword: '',
     isSearching: false,
     searchResults: [],
-    cartList: [
-      // { id: 1, name: '宫保鸡丁', price: 38, count: 1, image: '/images/icons/header.jpg' },
-      // { id: 2, name: '鱼香肉丝', price: 32, count: 2, image: '/images/icons/header.jpg' },
-      // { id: 3, name: '鱼香肉丝', price: 32, count: 2, image: '/images/icons/header.jpg' },
-      // { id: 4, name: '鱼香肉丝', price: 32, count: 2, image: '/images/icons/header.jpg' }
-    ],
-    categories: [
-      { id: 0, title: '热销推荐' },
-      { id: 1, title: '经典川菜' },
-      { id: 2, title: '家常热菜' },
-      { id: 3, title: '海鲜水产' },
-      { id: 4, title: '素食小炒' },
-      { id: 5, title: '主食米饭' },
-      { id: 6, title: '面食点心' },
-      { id: 7, title: '包点蒸品' },
-      { id: 8, title: '早餐早点' },
-      { id: 9, title: '饮品酒水' },
-      { id: 10, title: '甜品烘焙' },
-      { id: 11, title: '冰品冷饮' },
-      { id: 12, title: '健康轻食' }
-    ],
-    contentList: [
-      { id: 0, items: ['宫保鸡丁', '鱼香肉丝', '糖醋排骨'] },
-      { id: 1, items: ['麻婆豆腐', '回锅肉', '水煮鱼'] },
-      { id: 2, items: ['红烧肉', '东坡肉', '梅菜扣肉'] },
-      { id: 3, items: ['清蒸鲈鱼', '红烧带鱼', '糖醋鲤鱼'] },
-      { id: 4, items: ['炒时蔬', '凉拌黄瓜', '蒜蓉西兰花'] },
-      { id: 5, items: ['蛋炒饭', '扬州炒饭', '煲仔饭'] },
-      { id: 6, items: ['牛肉面', '炸酱面', '担担面'] },
-      { id: 7, items: ['小笼包', '饺子', '馄饨'] },
-      { id: 8, items: ['豆浆', '油条', '包子'] },
-      { id: 9, items: ['奶茶', '果汁', '可乐'] },
-      { id: 10, items: ['蛋糕', '蛋挞', '布丁'] },
-      { id: 11, items: ['冰淇淋', '雪糕', '冰沙'] },
-      { id: 12, items: ['水果拼盘', '沙拉'] }
-    ]
+    cartList: [],
+    categories: [],
+    contentList: []
   },
   onChange(event) {
     this.setData({
@@ -56,6 +27,7 @@ Page({
   onLoad() {
     console.log('菜谱页面加载');
     this.computeCartTotal();
+    this.fetchCategories();
   },
   onShow() {
     const orderSubmitted = wx.getStorageSync('orderSubmitted');
@@ -67,6 +39,49 @@ Page({
       wx.removeStorageSync('orderSubmitted');
     }
     this.computeCartTotal();
+    this.fetchCategories();
+  },
+
+  async fetchCategories() {
+    try {
+      const categories = await api.get('/category');
+      
+      const formattedCategories = categories
+        .filter(cat => cat.status === 1)
+        .map((cat, index) => ({
+          id: index,
+          categoryId: cat.id,
+          title: cat.title
+        }));
+      
+      const formattedContentList = categories
+        .filter(cat => cat.status === 1)
+        .map((cat, index) => ({
+          id: index,
+          items: (cat.dishes || [])
+            .filter(dish => dish.status === 1)
+            .map(dish => ({
+              id: dish.id,
+              categoryId: dish.categoryId,
+              name: dish.name,
+              description: dish.description || '美味佳肴，不容错过',
+              price: dish.price || 0,
+              imageUrl: dish.imageUrl || '/images/icons/header.jpg'
+            }))
+        }));
+      
+      this.setData({
+        categories: formattedCategories,
+        contentList: formattedContentList,
+        activeKey: 0
+      });
+    } catch (error) {
+      console.error('获取分类失败:', error);
+      wx.showToast({
+        title: '加载失败，请重试',
+        icon: 'none'
+      });
+    }
   },
 
   onPullDownRefresh () {
@@ -155,21 +170,21 @@ Page({
         setTimeout(() => {
           this.setData({ showFlyBall: false });
           
-          const itemName = this.data.contentList[this.data.activeKey].items[index];
+          const item = this.data.contentList[this.data.activeKey].items[index];
           
-          const existingItem = this.data.cartList.find(item => item.name === itemName);
+          const existingItem = this.data.cartList.find(cartItem => cartItem.id === item.id);
           if (existingItem) {
-            const cartList = this.data.cartList.map(item => 
-              item.name === itemName ? { ...item, count: item.count + 1 } : item
+            const cartList = this.data.cartList.map(cartItem => 
+              cartItem.id === item.id ? { ...cartItem, count: cartItem.count + 1 } : cartItem
             );
             this.setData({ cartList });
           } else {
             const newItem = {
-              id: Date.now(),
-              name: itemName,
-              price: 0,
+              id: item.id,
+              name: item.name,
+              price: item.price,
               count: 1,
-              image: '/images/icons/header.jpg'
+              image: item.imageUrl || '/images/icons/header.jpg'
             };
             const cartList = [...this.data.cartList, newItem];
             this.setData({ cartList });
@@ -193,24 +208,13 @@ Page({
       return;
     }
 
-    const results = [];
-    this.data.contentList.forEach((category, categoryIndex) => {
-      category.items.forEach((item, itemIndex) => {
-        if (item.toLowerCase().includes(keyword.toLowerCase())) {
-          results.push({
-            name: item,
-            categoryIndex: categoryIndex,
-            itemIndex: itemIndex,
-            categoryTitle: category.title
-          });
-        }
-      });
-    });
+    if (searchTimer) {
+      clearTimeout(searchTimer);
+    }
 
-    this.setData({
-      isSearching: true,
-      searchResults: results
-    });
+    searchTimer = setTimeout(() => {
+      this.searchFromServer(keyword);
+    }, 500);
   },
 
   onSearch() {
@@ -220,24 +224,43 @@ Page({
       return;
     }
 
-    const results = [];
-    this.data.contentList.forEach((category, categoryIndex) => {
-      category.items.forEach((item, itemIndex) => {
-        if (item.toLowerCase().includes(keyword.toLowerCase())) {
-          results.push({
-            name: item,
-            categoryIndex: categoryIndex,
-            itemIndex: itemIndex,
-            categoryTitle: category.title
-          });
-        }
-      });
-    });
+    this.searchFromServer(keyword);
+  },
 
-    this.setData({
-      isSearching: true,
-      searchResults: results
-    });
+  async searchFromServer(keyword) {
+    try {
+      const dishes = await api.get('/dish/search', { keyword });
+      
+      const results = dishes
+        .filter(dish => dish.status === 1)
+        .map((dish, index) => ({
+          id: dish.id,
+          categoryId: dish.categoryId,
+          name: dish.name,
+          description: dish.description || '美味佳肴，不容错过',
+          price: dish.price || 0,
+          imageUrl: dish.imageUrl || '/images/icons/header.jpg',
+          categoryIndex: dish.categoryId || 0,
+          itemIndex: index,
+          categoryTitle: this.getCategoryTitleById(dish.categoryId)
+        }));
+
+      this.setData({
+        isSearching: true,
+        searchResults: results
+      });
+    } catch (error) {
+      console.error('搜索失败:', error);
+      this.setData({
+        isSearching: true,
+        searchResults: []
+      });
+    }
+  },
+
+  getCategoryTitleById(categoryId) {
+    const category = this.data.categories.find(cat => cat.categoryId === categoryId);
+    return category ? category.title : '其他';
   },
 
   onClearSearch() {
@@ -291,21 +314,21 @@ Page({
         setTimeout(() => {
           this.setData({ showFlyBall: false });
           
-          const itemName = this.data.contentList[categoryIndex].items[itemIndex];
+          const item = this.data.contentList[categoryIndex].items[itemIndex];
           
-          const existingItem = this.data.cartList.find(item => item.name === itemName);
+          const existingItem = this.data.cartList.find(cartItem => cartItem.id === item.id);
           if (existingItem) {
-            const cartList = this.data.cartList.map(item => 
-              item.name === itemName ? { ...item, count: item.count + 1 } : item
+            const cartList = this.data.cartList.map(cartItem => 
+              cartItem.id === item.id ? { ...cartItem, count: cartItem.count + 1 } : cartItem
             );
             this.setData({ cartList });
           } else {
             const newItem = {
-              id: Date.now(),
-              name: itemName,
-              price: 0,
+              id: item.id,
+              name: item.name,
+              price: item.price,
               count: 1,
-              image: '/images/icons/header.jpg'
+              image: item.imageUrl || '/images/icons/header.jpg'
             };
             const cartList = [...this.data.cartList, newItem];
             this.setData({ cartList });

@@ -67,6 +67,12 @@ page {
   margin-bottom: 8rpx;
 }
 
+.profile-signature {
+  font-size: 24rpx;
+  color: #a0845e;
+  line-height: 1.4;
+}
+
 .profile-id {
   font-size: 24rpx;
   color: #a0845e;

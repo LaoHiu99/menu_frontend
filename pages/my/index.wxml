@@ -8,6 +8,7 @@
     <image wx:else class="profile-dog" src="{{userInfo.avatar}}" mode="aspectFit" />
     <view class="profile-info">
       <view class="profile-name">{{userInfo.name}}</view>
+      <view class="profile-signature">{{userInfo.signature}}</view>
     </view>
   </view>
   <view class="stats-section">

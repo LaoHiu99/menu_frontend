@@ -1,0 +1,56 @@
+<!-- pages/profile/index.wxml -->
+<view class="nav-placeholder" style="height: {{navBarHeight}}px;"></view>
+<view class="container">
+  <view class="profile-header">
+    <view class="back-btn" bindtap="onBack">
+      <view class="back-arrow">←</view>
+    </view>
+    <view class="header-title">个人信息</view>
+  </view>
+
+  <view class="profile-content">
+    <!-- 头像展示 -->
+    <view class="profile-item">
+      <view class="item-label">头像</view>
+      <view class="item-value">
+        <image class="avatar-preview" src="{{userInfo.avatar}}" mode="aspectFill" />
+      </view>
+    </view>
+
+    <!-- 昵称修改 -->
+    <view class="profile-item">
+      <view class="item-label">昵称</view>
+      <view class="item-value">
+        <input 
+          class="nickname-input" 
+          value="{{userInfo.name}}" 
+          bindinput="onNameInput" 
+          placeholder="请输入昵称"
+          maxlength="20"
+        />
+      </view>
+    </view>
+
+    <!-- 个性签名修改 -->
+    <view class="profile-item signature-item">
+      <view class="item-label">个性签名</view>
+      <view class="item-value">
+        <textarea 
+          class="signature-input" 
+          value="{{userInfo.signature}}" 
+          bindinput="onSignatureInput" 
+          placeholder="写点什么介绍一下自己吧~"
+          maxlength="100"
+          auto-height
+        />
+      </view>
+    </view>
+  </view>
+
+  <!-- 保存按钮 -->
+  <view class="save-section">
+    <button class="save-btn" bindtap="onSave" disabled="{{!hasChange}}">
+      保存修改
+    </button>
+  </view>
+</view>

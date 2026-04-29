@@ -49,18 +49,44 @@ Page({
     
     if (userInfo && token) {
       this.setData({
-        'userInfo.name': userInfo.nickname || '微信用户',
+        'userInfo.name': userInfo.nickname || '小白',
         'userInfo.avatar': userInfo.avatarUrl || '/images/avator.png',
         'userInfo.userId': userInfo.userId,
+        'userInfo.signature': userInfo.signature || '这个人很懒，什么都没留下~',
         isLogin: true
       });
+      
+      this.fetchUserProfile(userInfo.userId);
     } else {
       this.setData({
         'userInfo.name': '未登录',
         'userInfo.avatar': '/images/avator.png',
         'userInfo.userId': '点击头像登录',
+        'userInfo.signature': '',
         isLogin: false
       });
+    }
+  },
+
+  async fetchUserProfile(userId) {
+    try {
+      const profile = await api.get(`/user/profile/${userId}`);
+      
+      this.setData({
+        'userInfo.name': profile.nickname || '微信用户',
+        'userInfo.avatar': profile.avatarUrl || '/images/avator.png',
+        'userInfo.userId': profile.userId,
+        'userInfo.signature': profile.signature || '这个人很懒，什么都没留下~'
+      });
+      
+      wx.setStorageSync('userInfo', {
+        userId: profile.userId,
+        nickname: profile.nickname,
+        avatarUrl: profile.avatarUrl,
+        signature: profile.signature
+      });
+    } catch (error) {
+      console.error('获取用户详情失败:', error);
     }
   },
 
@@ -94,8 +120,11 @@ Page({
         'userInfo.name': result.user.nickname,
         'userInfo.avatar': result.user.avatarUrl,
         'userInfo.userId': result.user.userId,
+        'userInfo.signature': result.user.signature || '这个人很懒，什么都没留下~',
         isLogin: true
       });
+
+      this.fetchUserProfile(result.user.userId);
 
       wx.hideLoading();
 
@@ -147,10 +176,25 @@ Page({
 
   onTapMenu(e) {
     const id = e.currentTarget.dataset.id;
-    wx.showToast({
-      title: '功能开发中 🐾',
-      icon: 'none'
-    });
+    
+    if (id === 1) {
+      const token = wx.getStorageSync('token');
+      if (!token) {
+        wx.showToast({
+          title: '请先登录',
+          icon: 'none'
+        });
+        return;
+      }
+      wx.navigateTo({
+        url: '/pages/profile/index'
+      });
+    } else {
+      wx.showToast({
+        title: '功能开发中 🐾',
+        icon: 'none'
+      });
+    }
   },
 
   onLogout() {

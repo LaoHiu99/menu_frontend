@@ -1,13 +1,15 @@
 // pages/my/index.js
 const { setNavHeightToPage } = require('../../utils/navHeight.js');
+const api = require('../../utils/api');
 
 Page({
   data: {
     userInfo: {
-      name: '线条小狗',
-      avatar: '',
-      userId: 'DOG20260428'
+      name: '未登录',
+      avatar: '/images/avator.png',
+      userId: '点击头像登录'
     },
+    isLogin: false,
     stats: {
       orders: 12,
       coupons: 3,
@@ -31,10 +33,102 @@ Page({
   onLoad() {
     setNavHeightToPage(this);
     this.updateDailyQuote();
+    this.loadUserInfo();
   },
 
   onShow() {
     setNavHeightToPage(this);
+    this.loadUserInfo();
+  },
+
+  loadUserInfo() {
+    const userInfo = wx.getStorageSync('userInfo');
+    console.log(userInfo,'userInfo');
+    
+    const token = wx.getStorageSync('token');
+    
+    if (userInfo && token) {
+      this.setData({
+        'userInfo.name': userInfo.nickname || '微信用户',
+        'userInfo.avatar': userInfo.avatarUrl || '/images/avator.png',
+        'userInfo.userId': userInfo.userId,
+        isLogin: true
+      });
+    } else {
+      this.setData({
+        'userInfo.name': '未登录',
+        'userInfo.avatar': '/images/avator.png',
+        'userInfo.userId': '点击头像登录',
+        isLogin: false
+      });
+    }
+  },
+
+  onChooseAvatar(e) {
+    const avatarUrl = e.detail.avatarUrl;
+    this.setData({ 'userInfo.avatar': avatarUrl });
+    this.doLogin();
+  },
+
+  async doLogin() {
+    wx.showLoading({
+      title: '登录中...'
+    });
+
+    try {
+      const loginRes = await this.wxLogin();
+      
+      const result = await api.post('/user/login', {
+        code: loginRes.code,
+        nickname: this.data.userInfo.name === '未登录' ? '微信用户' : this.data.userInfo.name,
+        avatarUrl: this.data.userInfo.avatar
+      });
+
+      wx.setStorageSync('token', result.token);
+      wx.setStorageSync('userInfo', result.user);
+
+      const app = getApp();
+      app.setLoginInfo(result.token, result.user);
+
+      this.setData({
+        'userInfo.name': result.user.nickname,
+        'userInfo.avatar': result.user.avatarUrl,
+        'userInfo.userId': result.user.userId,
+        isLogin: true
+      });
+
+      wx.hideLoading();
+
+      wx.showToast({
+        title: '登录成功',
+        icon: 'success'
+      });
+
+    } catch (error) {
+      wx.hideLoading();
+      console.error('登录失败:', error);
+      wx.showToast({
+        title: error.message || '登录失败，请重试',
+        icon: 'none'
+      });
+    }
+  },
+
+  wxLogin() {
+    return new Promise((resolve, reject) => {
+      wx.login({
+        success: (res) => {
+          if (res.code) {
+            resolve(res);
+          } else {
+            reject(new Error('获取登录凭证失败'));
+          }
+        },
+        fail: (err) => {
+          reject(err);
+        }
+      });
+    });
   },
 
   updateDailyQuote() {
@@ -67,6 +161,9 @@ Page({
       confirmColor: '#8b6f47',
       success: (res) => {
         if (res.confirm) {
+          const app = getApp();
+          app.logout();
+          this.loadUserInfo();
           wx.showToast({
             title: '已退出 🐾',
             icon: 'success'

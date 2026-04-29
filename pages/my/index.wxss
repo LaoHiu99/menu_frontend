@@ -27,8 +27,25 @@ page {
   animation: profileDogWave 3s ease-in-out infinite;
 }
 
+.avatar-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  margin-right: 24rpx;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.avatar-btn:active {
+  opacity: 0.7;
+}
+
 @keyframes profileDogWave {
-  0%, 100% {
+  0%,
+  100% {
     transform: rotate(0deg);
   }
   25% {
@@ -86,7 +103,7 @@ page {
 }
 
 .stats-section::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -50%;
   right: -20%;
@@ -105,7 +122,7 @@ page {
 }
 
 .stat-item:not(:last-child)::after {
-  content: '';
+  content: "";
   position: absolute;
   right: 0;
   top: 20%;
@@ -202,7 +219,8 @@ page {
 }
 
 @keyframes quoteDogBounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {

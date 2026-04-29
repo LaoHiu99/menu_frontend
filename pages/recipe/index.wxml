@@ -8,8 +8,18 @@
     <view class="body-top">
       <image class="avator" src="/images/icons/avator.jpg" mode="aspectFill" />
       <view class="content">
-        <view class="title">电子菜单</view>
-        <view class="number">共2人</view>
+        <view class="title">
+          <text class="title-icon">🍽️</text>
+          <text class="title-text">电子菜单</text>
+        </view>
+        <view class="number">
+          <text class="number-dot">●</text>
+          <text class="number-text">共2人</text>
+        </view>
+      </view>
+      <view class="header-decoration">
+        <view class="decoration-paw">🐾</view>
+        <view class="decoration-paw paw-small">🐾</view>
       </view>
     </view>
     <view class="notice">公告: 暂无</view>

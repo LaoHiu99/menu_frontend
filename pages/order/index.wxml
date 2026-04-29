@@ -1,6 +1,5 @@
 <!-- 自定义导航栏占位 -->
 <view class="nav-placeholder" style="height: {{navBarHeight}}px;"></view>
-
 <view class="container">
   <view class="tab-bar">
     <view class="tab-item {{activeTab === 0 ? 'active' : ''}}" bindtap="onTabChange" data-tab="0">
@@ -11,14 +10,15 @@
       <text>已完成</text>
     </view>
   </view>
-
   <view class="order-list">
-    <view wx:if="{{currentOrders.length === 0}}" class="empty-state">
+    <!-- 空状态 -->
+    <view wx:if="{{currentOrders.length === 0 && !loading}}" class="empty-state">
       <image class="empty-icon" src="/images/icons/search.png" mode="aspectFit" />
       <view class="empty-text">暂无订单</view>
     </view>
-
+    <!-- 订单卡片列表 -->
     <view wx:for="{{currentOrders}}" wx:key="id" class="order-card">
+      <!-- 订单头部 -->
       <view class="order-header">
         <image class="order-avatar" src="{{item.avatar}}" mode="aspectFill" />
         <view class="order-user-info">
@@ -29,22 +29,34 @@
           {{item.status}}
         </view>
       </view>
-
+      <!-- 商品列表 -->
       <view class="order-goods">
-        <view class="order-goods-item" wx:for="{{item.goods}}" wx:for-item="good" wx:key="index">
+        <view wx:for="{{item.goods}}" wx:for-item="good" wx:key="id" class="order-goods-item">
           <image class="order-goods-image" src="{{good.image}}" mode="aspectFill" />
           <view class="order-goods-info">
             <view class="order-goods-name">{{good.name}}</view>
-            <view class="order-goods-count">x{{good.count}}</view>
+            <view class="order-goods-detail">
+              <view class="order-goods-count">x{{good.count}}</view>
+              <view class="order-goods-price">¥{{good.price}}</view>
+            </view>
+          </view>
+          <view class="order-goods-subtotal">
+            <view class="subtotal-label">小计</view>
+            <view class="subtotal-amount">¥{{good.subtotal}}</view>
           </view>
         </view>
       </view>
-
+      <!-- 合计金额 -->
+      <view class="order-total">
+        <view class="order-total-label">合计</view>
+        <view class="order-total-amount">¥{{item.totalAmount}}</view>
+      </view>
+      <!-- 备注信息 -->
       <view wx:if="{{item.remark}}" class="order-remark">
         <text class="remark-label">备注：</text>
         <text class="remark-text">{{item.remark}}</text>
       </view>
-
+      <!-- 操作按钮（仅未完成订单显示） -->
       <view class="order-actions" wx:if="{{item.status === '未完成'}}">
         <view class="action-btn cancel-btn" bindtap="onCancelOrder" data-id="{{item.id}}">
           <text>取消订单</text>
@@ -57,5 +69,15 @@
         </view>
       </view>
     </view>
+    <!-- 加载更多状态 -->
+    <view wx:if="{{loading}}" class="loading-more">
+      <text>加载中...</text>
+    </view>
+    <view wx:elif="{{!hasMore && currentOrders.length > 0}}" class="no-more">
+      <text>没有更多了</text>
+    </view>
+  </view>
+  <view class="back-to-top" wx:if="{{showBackToTop}}" bindtap="onBackToTop">
+    <text class="back-to-top-icon">↑</text>
   </view>
 </view>

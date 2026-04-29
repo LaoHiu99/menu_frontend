@@ -1,142 +1,238 @@
 const { setNavHeightToPage } = require('../../utils/navHeight.js');
+const api = require('../../utils/api');
 
 Page({
   data: {
     activeTab: 0,
     orders: [],
     unfinishedCount: 0,
+    currentOrders: [],
     statusBarHeight: 0,
     navBarHeight: 0,
     capsuleHeight: 0,
     capsuleTop: 0,
     capsuleBottom: 0,
-    safeAreaTop: 0
+    safeAreaTop: 0,
+    page: 1,
+    pageSize: 10,
+    totalPages: 0,
+    total: 0,
+    loading: false,
+    hasMore: true,
+    showBackToTop: false
   },
 
   onLoad(options) {
     setNavHeightToPage(this);
-    
-    if (options.orderData) {
-      const orderData = JSON.parse(decodeURIComponent(options.orderData));
-      this.addOrder(orderData);
-    }
-    
-    const orders = wx.getStorageSync('orders') || [];
-    this.setData({ orders });
-    this.updateOrders();
+    this.initPage(0);
   },
 
   onShow() {
     setNavHeightToPage(this);
     
-    const pendingOrder = wx.getStorageSync('pendingOrder');
-    if (pendingOrder) {
-      this.addOrder(pendingOrder);
-      wx.removeStorageSync('pendingOrder');
-    }
+    const savedTab = wx.getStorageSync('orderTab');
     
-    const orders = wx.getStorageSync('orders') || [];
-    this.setData({ orders });
-    this.updateOrders();
+    if (savedTab !== undefined && savedTab !== null) {
+      this.initPage(Number(savedTab));
+      wx.removeStorageSync('orderTab');
+    }
   },
 
-  addOrder(orderData) {
-    const orders = wx.getStorageSync('orders') || [];
-    
-    const newOrder = {
-      id: Date.now(),
-      username: '用户' + Math.floor(Math.random() * 1000),
-      avatar: '/images/icons/avator.jpg',
-      goods: orderData.cartList,
-      remark: orderData.remark,
-      time: this.formatTime(orderData.createTime),
-      status: '未完成'
-    };
-    
-    orders.unshift(newOrder);
-    wx.setStorageSync('orders', orders);
-    this.setData({ orders });
-    this.updateOrders();
+  onPageScroll(e) {
+    const showBackToTop = e.scrollTop > 300;
+    if (showBackToTop !== this.data.showBackToTop) {
+      this.setData({ showBackToTop: showBackToTop });
+    }
+  },
+
+  // 初始化页面数据
+  initPage(tab = 0) {
+    this.setData({
+      activeTab: tab,
+      page: 1,
+      orders: [],
+      currentOrders: [],
+      hasMore: true,
+      loading: false
+    });
+    this.fetchOrders();
+  },
+
+  async fetchOrders() {
+    if (this.data.loading || !this.data.hasMore) return;
+
+    this.setData({ loading: true });
+
+    try {
+      const userInfo = wx.getStorageSync('userInfo');
+      if (!userInfo || !userInfo.userId) {
+        this.setData({ loading: false });
+        return;
+      }
+
+      const status = this.data.activeTab === 0 ? 0 : 1;
+      const result = await api.get(`/order/user/${userInfo.userId}`, {
+        status: status,
+        page: this.data.page,
+        pageSize: this.data.pageSize
+      });
+
+      const formattedOrders = result.list.map(order => ({
+        id: order.id,
+        orderNo: order.orderNo,
+        username: order.username,
+        avatar: order.avatar || '/images/icons/avator.jpg',
+        totalAmount: order.totalAmount,
+        remark: order.remark,
+        status: order.status === 0 ? '未完成' : '已完成',
+        time: this.formatTime(order.createdAt),
+        goods: order.items.map(item => ({
+          id: item.id,
+          name: item.dishName,
+          image: item.dishImage || '/images/icons/header.jpg',
+          count: item.count,
+          price: item.price,
+          subtotal: item.subtotal
+        }))
+      }));
+
+      const newOrders = [...this.data.orders, ...formattedOrders];
+
+      this.setData({
+        orders: newOrders,
+        currentOrders: newOrders,
+        total: result.total,
+        totalPages: result.totalPages,
+        hasMore: this.data.page < result.totalPages,
+        loading: false
+      });
+
+      if (this.data.activeTab === 0) {
+        this.setData({
+          unfinishedCount: result.total
+        });
+      }
+      
+      // 数据加载完成后，重新计算布局（确保新数据渲染后高度正确）
+      setTimeout(() => {
+        this.calculateLayout();
+      }, 100);
+      
+    } catch (error) {
+      console.error('获取订单失败:', error);
+      this.setData({ loading: false });
+    }
   },
 
   onTabChange(e) {
     const tab = parseInt(e.currentTarget.dataset.tab);
-    this.setData({ activeTab: tab });
-    this.updateOrders();
+    if (this.data.activeTab === tab) return;
+    
+    // 切换标签页时重置所有状态并重新加载
+    this.initPage(tab);
+    
+    // 切换后重新计算布局
+    setTimeout(() => {
+      this.calculateLayout();
+    }, 100);
   },
 
-  updateOrders() {
-    const { activeTab, orders } = this.data;
-    const unfinishedCount = orders.filter(o => o.status === '未完成').length;
-    
-    let currentOrders = [];
-    if (activeTab === 0) {
-      currentOrders = orders.filter(o => o.status === '未完成');
-    } else {
-      currentOrders = orders.filter(o => o.status === '已完成');
+  onReachBottom() {
+    if (this.data.hasMore && !this.data.loading) {
+      this.setData({
+        page: this.data.page + 1
+      });
+      this.fetchOrders();
     }
-    
-    this.setData({ currentOrders, unfinishedCount });
   },
 
-  onCancelOrder(e) {
+  async onCancelOrder(e) {
     const id = e.currentTarget.dataset.id;
     wx.showModal({
       title: '提示',
       content: '确定要取消该订单吗？',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          this.deleteOrder(id);
-          wx.showToast({
-            title: '订单已取消',
-            icon: 'success'
-          });
+          try {
+            await api.put(`/order/${id}/status`, {
+              status: 2
+            });
+            wx.showToast({
+              title: '订单已取消',
+              icon: 'success'
+            });
+            // 刷新当前标签页数据
+            this.initPage(this.data.activeTab);
+            // 刷新后重新计算布局
+            setTimeout(() => {
+              this.calculateLayout();
+            }, 100);
+          } catch (error) {
+            console.error('取消订单失败:', error);
+            wx.showToast({
+              title: error.message || '取消失败，请重试',
+              icon: 'none'
+            });
+          }
         }
       }
     });
   },
 
-  onCompleteOrder(e) {
+  async onCompleteOrder(e) {
     const id = e.currentTarget.dataset.id;
-    const orders = this.data.orders.map(order => {
-      if (order.id === id) {
-        return { ...order, status: '已完成' };
-      }
-      return order;
-    });
-    
-    wx.setStorageSync('orders', orders);
-    this.setData({ orders });
-    this.updateOrders();
-    
-    wx.showToast({
-      title: '订单已完成',
-      icon: 'success'
-    });
+    try {
+      await api.put(`/order/${id}/status`, {
+        status: 1
+      });
+      wx.showToast({
+        title: '订单已完成',
+        icon: 'success'
+      });
+      // 刷新当前标签页数据
+      this.initPage(this.data.activeTab);
+      // 刷新后重新计算布局
+      setTimeout(() => {
+        this.calculateLayout();
+      }, 100);
+    } catch (error) {
+      console.error('完成订单失败:', error);
+      wx.showToast({
+        title: error.message || '操作失败，请重试',
+        icon: 'none'
+      });
+    }
   },
 
-  onDeleteOrder(e) {
+  async onDeleteOrder(e) {
     const id = e.currentTarget.dataset.id;
     wx.showModal({
       title: '提示',
       content: '确定要删除该订单吗？',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          this.deleteOrder(id);
-          wx.showToast({
-            title: '订单已删除',
-            icon: 'success'
-          });
+          try {
+            await api.delete(`/order/${id}`);
+            wx.showToast({
+              title: '订单已删除',
+              icon: 'success'
+            });
+            // 刷新当前标签页数据
+            this.initPage(this.data.activeTab);
+            // 刷新后重新计算布局
+            setTimeout(() => {
+              this.calculateLayout();
+            }, 100);
+          } catch (error) {
+            console.error('删除订单失败:', error);
+            wx.showToast({
+              title: error.message || '删除失败，请重试',
+              icon: 'none'
+            });
+          }
         }
       }
     });
-  },
-
-  deleteOrder(id) {
-    const orders = this.data.orders.filter(order => order.id !== id);
-    wx.setStorageSync('orders', orders);
-    this.setData({ orders });
-    this.updateOrders();
   },
 
   formatTime(timestamp) {
@@ -147,5 +243,12 @@ Page({
     const hour = String(date.getHours()).padStart(2, '0');
     const minute = String(date.getMinutes()).padStart(2, '0');
     return `${year}-${month}-${day} ${hour}:${minute}`;
+  },
+
+  onBackToTop() {
+    wx.pageScrollTo({
+      scrollTop: 0,
+      duration: 300
+    });
   }
 });

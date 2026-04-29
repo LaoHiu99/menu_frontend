@@ -4,7 +4,7 @@ page {
 
 .container {
   background-color: #fef9f3;
-  min-height: calc(100vh - 88px);
+  min-height: 100vh;
 }
 
 .tab-bar {
@@ -54,6 +54,15 @@ page {
   padding: 0 24rpx 40rpx;
 }
 
+/* 加载更多样式 */
+.loading-more, .no-more {
+  text-align: center;
+  padding: 30rpx 0;
+  font-size: 26rpx;
+  color: #a0845e;
+}
+
+/* 其余样式保持不变 */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -173,12 +182,59 @@ page {
   font-weight: 500;
 }
 
+.order-goods-detail {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
 .order-goods-count {
   font-size: 26rpx;
   color: #a0845e;
   background-color: #fff5eb;
   padding: 6rpx 14rpx;
   border-radius: 16rpx;
+}
+
+.order-goods-price {
+  font-size: 28rpx;
+  color: #8b6f47;
+}
+
+.order-goods-subtotal {
+  text-align: right;
+  margin-left: 16rpx;
+}
+
+.subtotal-label {
+  font-size: 22rpx;
+  color: #a0845e;
+}
+
+.subtotal-amount {
+  font-size: 26rpx;
+  color: #8b6f47;
+  font-weight: 500;
+}
+
+.order-total {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  padding: 20rpx 0 8rpx;
+  border-bottom: 2rpx dashed #f0e0d0;
+}
+
+.order-total-label {
+  font-size: 26rpx;
+  color: #6b5637;
+  margin-right: 16rpx;
+}
+
+.order-total-amount {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #c97e3a;
 }
 
 .order-remark {
@@ -213,12 +269,6 @@ page {
   border: 2rpx solid;
 }
 
-.action-btn .action-icon {
-  width: 28rpx;
-  height: 28rpx;
-  margin-right: 8rpx;
-}
-
 .cancel-btn {
   border-color: #f0e0d0;
   color: #8b6f47;
@@ -240,4 +290,26 @@ page {
 .action-btn:active {
   opacity: 0.8;
   transform: scale(0.95);
+}
+
+.back-to-top {
+  position: fixed;
+  right: 40rpx;
+  bottom: 120rpx;
+  width: 80rpx;
+  height: 80rpx;
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 4rpx 16rpx rgba(139, 111, 71, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  transition: all 0.3s;
+}
+
+.back-to-top-icon {
+  font-size: 40rpx;
+  color: #8b6f47;
+  font-weight: bold;
 }

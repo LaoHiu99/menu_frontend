@@ -1,11 +1,23 @@
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'http://192.168.1.5:3000';
+
+function buildUrl(url, params) {
+  if (!params || Object.keys(params).length === 0) {
+    return url;
+  }
+  const queryString = Object.keys(params)
+    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+    .join('&');
+  return `${url}?${queryString}`;
+}
 
 function request(options) {
   return new Promise((resolve, reject) => {
     const token = wx.getStorageSync('token');
     
+    const finalUrl = buildUrl(`${BASE_URL}${options.url}`, options.params);
+    
     wx.request({
-      url: `${BASE_URL}${options.url}`,
+      url: finalUrl,
       method: options.method || 'GET',
       data: options.data || {},
       header: {
@@ -36,8 +48,8 @@ function request(options) {
 module.exports = {
   BASE_URL,
   request,
-  get: (url, data) => request({ url, method: 'GET', data }),
-  post: (url, data) => request({ url, method: 'POST', data }),
-  put: (url, data) => request({ url, method: 'PUT', data }),
-  delete: (url, data) => request({ url, method: 'DELETE', data })
+  get: (url, data, options = {}) => request({ url, method: 'GET', data, params: options.params }),
+  post: (url, data, options = {}) => request({ url, method: 'POST', data, params: options.params }),
+  put: (url, data, options = {}) => request({ url, method: 'PUT', data, params: options.params }),
+  delete: (url, options = {}) => request({ url, method: 'DELETE', params: options.params })
 };

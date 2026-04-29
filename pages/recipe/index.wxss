@@ -80,6 +80,20 @@
   height: 150rpx;
   background-color: #fff;
   border-bottom: 2rpx dashed #f0e0d0;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.body-top::before {
+  content: "";
+  position: absolute;
+  top: -20rpx;
+  right: -20rpx;
+  width: 100rpx;
+  height: 100rpx;
+  background: linear-gradient(135deg, rgba(243, 202, 126, 0.1) 0%, rgba(243, 202, 126, 0) 100%);
+  border-radius: 50%;
 }
 
 .avator {
@@ -87,6 +101,8 @@
   height: 150rpx;
   background-color: aquamarine;
   border-radius: 20rpx;
+  border: 3rpx solid #f5e6d8;
+  box-shadow: 0 4rpx 12rpx rgba(139, 111, 71, 0.15);
 }
 
 .content {
@@ -95,14 +111,69 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  flex: 1;
 }
 
 .title {
+  display: flex;
+  align-items: center;
+}
+
+.title-icon {
+  font-size: 36rpx;
+  margin-right: 12rpx;
+}
+
+.title-text {
   font-size: 40rpx;
+  font-weight: bold;
+  color: #6b5637;
+  letter-spacing: 2rpx;
 }
 
 .number {
-  color: #7e8081;
+  display: flex;
+  align-items: center;
+  margin-top: 8rpx;
+}
+
+.number-dot {
+  color: #f3ca7e;
+  font-size: 16rpx;
+  margin-right: 12rpx;
+}
+
+.number-text {
+  color: #a0845e;
+  font-size: 26rpx;
+  font-weight: 500;
+}
+
+.header-decoration {
+  display: flex;
+  align-items: flex-end;
+  gap: 8rpx;
+  margin-left: auto;
+  opacity: 0.4;
+}
+
+.decoration-paw {
+  font-size: 32rpx;
+  animation: paw-bounce 2s ease-in-out infinite;
+}
+
+.paw-small {
+  font-size: 24rpx;
+  animation-delay: 0.3s;
+}
+
+@keyframes paw-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8rpx);
+  }
 }
 
 .notice {

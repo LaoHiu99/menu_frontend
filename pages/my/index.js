@@ -11,11 +11,23 @@ Page({
     },
     isLogin: false,
     stats: {
-      orders: 12,
+      orders: 0,
+      pendingOrders: 0,
+      completedOrders: 0,
       coupons: 3,
       points: 580,
       favorites: 8
     },
+    friendStats: {
+      friendCount: 0,
+      requestCount: 0
+    },
+    friendRequests: [],
+    friendList: [],
+    friendIdInput: '',
+    showAddFriendModal: false,
+    showFriendRequestsModal: false,
+    showFriendListModal: false,
     menuItems: [
       { id: 1, name: '个人信息', icon: '🐾' },
       { id: 7, name: '关于我们', icon: '🥰' },
@@ -43,8 +55,6 @@ Page({
 
   loadUserInfo() {
     const userInfo = wx.getStorageSync('userInfo');
-    console.log(userInfo,'userInfo');
-    
     const token = wx.getStorageSync('token');
     
     if (userInfo && token) {
@@ -57,6 +67,7 @@ Page({
       });
       
       this.fetchUserProfile(userInfo.userId);
+      this.fetchFriendStats(userInfo.userId);
     } else {
       this.setData({
         'userInfo.name': '未登录',
@@ -72,11 +83,16 @@ Page({
     try {
       const profile = await api.get(`/user/profile/${userId}`);
       
+      const orderCount = profile.orderCount || { pending: 0, completed: 0, total: 0 };
+      
       this.setData({
         'userInfo.name': profile.nickname || '微信用户',
         'userInfo.avatar': profile.avatarUrl || '/images/avator.png',
         'userInfo.userId': profile.userId,
-        'userInfo.signature': profile.signature || '这个人很懒，什么都没留下~'
+        'userInfo.signature': profile.signature || '这个人很懒，什么都没留下~',
+        'stats.orders': orderCount.total,
+        'stats.pendingOrders': orderCount.pending,
+        'stats.completedOrders': orderCount.completed
       });
       
       wx.setStorageSync('userInfo', {
@@ -197,6 +213,257 @@ Page({
     }
   },
 
+  onTapPendingOrders() {
+  },
+
+  onTapCompletedOrders() {
+  },
+
+  onTapTotalOrders() {
+  },
+
+  onCopyUserId() {
+    if (!this.data.isLogin) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none'
+      });
+      return;
+    }
+    
+    wx.setClipboardData({
+      data: this.data.userInfo.userId,
+      success: () => {
+        wx.showToast({
+          title: 'ID已复制',
+          icon: 'success'
+        });
+      }
+    });
+  },
+
+  async fetchFriendStats(userId) {
+    if (!userId) return;
+    
+    try {
+      const requests = await api.get(`/friend/requests/${userId}`);
+      const friends = await api.get(`/friend/list/${userId}`);
+      
+      this.setData({
+        'friendStats.requestCount': requests.length || 0,
+        'friendStats.friendCount': friends.length || 0
+      });
+    } catch (error) {
+      console.error('获取好友统计失败:', error);
+    }
+  },
+
+  onTapAddFriend() {
+    if (!this.data.isLogin) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none'
+      });
+      return;
+    }
+    this.setData({
+      showAddFriendModal: true,
+      friendIdInput: ''
+    });
+  },
+
+  onCloseAddFriendModal() {
+    this.setData({ showAddFriendModal: false });
+  },
+
+  onFriendIdInput(e) {
+    this.setData({ friendIdInput: e.detail.value });
+  },
+
+  async onSendFriendRequest() {
+    if (!this.data.friendIdInput.trim()) {
+      wx.showToast({
+        title: '请输入好友ID',
+        icon: 'none'
+      });
+      return;
+    }
+
+    if (this.data.friendIdInput === this.data.userInfo.userId) {
+      wx.showToast({
+        title: '不能添加自己为好友',
+        icon: 'none'
+      });
+      return;
+    }
+
+    try {
+      await api.post('/friend/request', {
+        userId: this.data.userInfo.userId,
+        friendUserId: this.data.friendIdInput
+      });
+
+      wx.showToast({
+        title: '好友请求已发送',
+        icon: 'success'
+      });
+
+      this.setData({
+        showAddFriendModal: false,
+        friendIdInput: ''
+      });
+
+      this.fetchFriendStats(this.data.userInfo.userId);
+    } catch (error) {
+      console.error('发送好友请求失败:', error);
+      wx.showToast({
+        title: error.message || '发送失败，请重试',
+        icon: 'none'
+      });
+    }
+  },
+
+  onTapFriendRequests() {
+    if (!this.data.isLogin) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none'
+      });
+      return;
+    }
+    this.fetchFriendRequests();
+    this.setData({ showFriendRequestsModal: true });
+  },
+
+  onCloseFriendRequestsModal() {
+    this.setData({ showFriendRequestsModal: false });
+  },
+
+  async fetchFriendRequests() {
+    try {
+      const requests = await api.get(`/friend/requests/${this.data.userInfo.userId}`);
+      this.setData({ friendRequests: requests || [] });
+    } catch (error) {
+      console.error('获取好友请求失败:', error);
+      wx.showToast({
+        title: '获取好友请求失败',
+        icon: 'none'
+      });
+    }
+  },
+
+  async onAcceptFriendRequest(e) {
+    const id = e.currentTarget.dataset.id;
+    
+    try {
+      await api.put(`/friend/request/${id}/accept`, null, {
+        params: { userId: this.data.userInfo.userId }
+      });
+
+      wx.showToast({
+        title: '已接受好友请求',
+        icon: 'success'
+      });
+
+      this.fetchFriendRequests();
+      this.fetchFriendStats(this.data.userInfo.userId);
+    } catch (error) {
+      console.error('接受好友请求失败:', error);
+      wx.showToast({
+        title: error.message || '操作失败，请重试',
+        icon: 'none'
+      });
+    }
+  },
+
+  async onRejectFriendRequest(e) {
+    const id = e.currentTarget.dataset.id;
+    
+    try {
+      await api.put(`/friend/request/${id}/reject`, null, {
+        params: { userId: this.data.userInfo.userId }
+      });
+
+      wx.showToast({
+        title: '已拒绝好友请求',
+        icon: 'success'
+      });
+
+      this.fetchFriendRequests();
+      this.fetchFriendStats(this.data.userInfo.userId);
+    } catch (error) {
+      console.error('拒绝好友请求失败:', error);
+      wx.showToast({
+        title: error.message || '操作失败，请重试',
+        icon: 'none'
+      });
+    }
+  },
+
+  onTapFriendList() {
+    if (!this.data.isLogin) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none'
+      });
+      return;
+    }
+    this.fetchFriendList();
+    this.setData({ showFriendListModal: true });
+  },
+
+  onCloseFriendListModal() {
+    this.setData({ showFriendListModal: false });
+  },
+
+  async fetchFriendList() {
+    try {
+      const friends = await api.get(`/friend/list/${this.data.userInfo.userId}`);
+      this.setData({ friendList: friends || [] });
+    } catch (error) {
+      console.error('获取好友列表失败:', error);
+      wx.showToast({
+        title: '获取好友列表失败',
+        icon: 'none'
+      });
+    }
+  },
+
+  async onDeleteFriend(e) {
+    const friendId = e.currentTarget.dataset.friendid;
+    
+    wx.showModal({
+      title: '提示',
+      content: '确定要删除该好友吗？',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            await api.delete(`/friend/${friendId}`, {
+              params: { userId: this.data.userInfo.userId }
+            });
+
+            wx.showToast({
+              title: '已删除好友',
+              icon: 'success'
+            });
+
+            this.fetchFriendList();
+            this.fetchFriendStats(this.data.userInfo.userId);
+          } catch (error) {
+            console.error('删除好友失败:', error);
+            wx.showToast({
+              title: error.message || '操作失败，请重试',
+              icon: 'none'
+            });
+          }
+        }
+      }
+    });
+  },
+
+  stopPropagation() {
+  },
+
   onLogout() {
     wx.showModal({
       title: '提示',
@@ -207,6 +474,15 @@ Page({
         if (res.confirm) {
           const app = getApp();
           app.logout();
+          
+          this.setData({
+            'stats.orders': 0,
+            'stats.pendingOrders': 0,
+            'stats.completedOrders': 0,
+            'friendStats.friendCount': 0,
+            'friendStats.requestCount': 0
+          });
+          
           this.loadUserInfo();
           wx.showToast({
             title: '已退出 🐾',

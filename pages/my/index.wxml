@@ -9,12 +9,56 @@
     <view class="profile-info">
       <view class="profile-name">{{userInfo.name}}</view>
       <view class="profile-signature">{{userInfo.signature}}</view>
+      <view class="profile-userid" bindtap="onCopyUserId" wx:if="{{isLogin}}">
+        <text class="userid-label">ID:</text>
+        <text class="userid-text">{{userInfo.userId}}</text>
+        <text class="userid-copy-icon">📋</text>
+      </view>
     </view>
   </view>
   <view class="stats-section">
-    <view class="stat-item">
+    <view class="stat-item" bindtap="onTapPendingOrders">
+      <text class="stat-num">{{stats.pendingOrders}}</text>
+      <text class="stat-label">未完成</text>
+    </view>
+    <view class="stat-item" bindtap="onTapCompletedOrders">
+      <text class="stat-num">{{stats.completedOrders}}</text>
+      <text class="stat-label">已完成</text>
+    </view>
+    <view class="stat-item" bindtap="onTapTotalOrders">
       <text class="stat-num">{{stats.orders}}</text>
-      <text class="stat-label">订单</text>
+      <text class="stat-label">总订单</text>
+    </view>
+  </view>
+  <view class="friend-section">
+    <view class="section-title">
+      <view class="title-paw">🐾</view>
+      <view class="title-text">我的好友</view>
+    </view>
+    <view class="friend-stats">
+      <view class="friend-stat-item" bindtap="onTapFriendList">
+        <view class="friend-stat-icon">👥</view>
+        <view class="friend-stat-info">
+          <text class="friend-stat-num">{{friendStats.friendCount}}</text>
+          <text class="friend-stat-label">好友</text>
+        </view>
+      </view>
+      <view class="friend-stat-item" bindtap="onTapFriendRequests">
+        <view class="friend-stat-icon">💌</view>
+        <view class="friend-stat-info">
+          <text class="friend-stat-num">{{friendStats.requestCount}}</text>
+          <text class="friend-stat-label">待处理</text>
+        </view>
+        <view class="friend-badge" wx:if="{{friendStats.requestCount > 0}}">
+          {{friendStats.requestCount}}
+        </view>
+      </view>
+      <view class="friend-stat-item add-friend-btn" bindtap="onTapAddFriend">
+        <view class="friend-stat-icon">➕</view>
+        <view class="friend-stat-info">
+          <text class="friend-stat-label">添加好友</text>
+        </view>
+      </view>
     </view>
   </view>
   <view class="menu-section">
@@ -40,5 +84,83 @@
     <view class="footer-paw">🐾</view>
     <view class="footer-text">线条小狗陪你每一天</view>
     <view class="footer-paw">🐾</view>
+  </view>
+  <!-- 添加好友弹窗 -->
+  <view class="modal-mask" wx:if="{{showAddFriendModal}}" bindtap="onCloseAddFriendModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">添加好友</text>
+        <view class="modal-close" bindtap="onCloseAddFriendModal">✕</view>
+      </view>
+      <view class="modal-body">
+        <view class="input-group">
+          <text class="input-label">好友ID</text>
+          <input class="friend-id-input" placeholder="请输入好友的用户ID" value="{{friendIdInput}}" bindinput="onFriendIdInput" />
+        </view>
+      </view>
+      <view class="modal-footer">
+        <view class="modal-btn modal-btn-cancel" bindtap="onCloseAddFriendModal">
+          <text>取消</text>
+        </view>
+        <view class="modal-btn modal-btn-confirm" bindtap="onSendFriendRequest">
+          <text>发送请求</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  <!-- 好友请求列表弹窗 -->
+  <view class="modal-mask" wx:if="{{showFriendRequestsModal}}" bindtap="onCloseFriendRequestsModal">
+    <view class="modal-content modal-large" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">好友请求</text>
+        <view class="modal-close" bindtap="onCloseFriendRequestsModal">✕</view>
+      </view>
+      <view class="modal-body">
+        <view wx:if="{{friendRequests.length === 0}}" class="empty-requests">
+          <text class="empty-icon">📭</text>
+          <text class="empty-text">暂无好友请求</text>
+        </view>
+        <view wx:for="{{friendRequests}}" wx:key="id" class="friend-request-item">
+          <view class="request-info">
+            <text class="request-userid">{{item.userId}}</text>
+            <text class="request-time">{{item.createdAt}}</text>
+          </view>
+          <view class="request-actions">
+            <view class="action-btn accept-btn" bindtap="onAcceptFriendRequest" data-id="{{item.id}}">
+              <text>接受</text>
+            </view>
+            <view class="action-btn reject-btn" bindtap="onRejectFriendRequest" data-id="{{item.id}}">
+              <text>拒绝</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+  <!-- 好友列表弹窗 -->
+  <view class="modal-mask" wx:if="{{showFriendListModal}}" bindtap="onCloseFriendListModal">
+    <view class="modal-content modal-large" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">我的好友</text>
+        <view class="modal-close" bindtap="onCloseFriendListModal">✕</view>
+      </view>
+      <view class="modal-body">
+        <view wx:if="{{friendList.length === 0}}" class="empty-friends">
+          <text class="empty-icon">🐾</text>
+          <text class="empty-text">暂无好友</text>
+        </view>
+        <view wx:for="{{friendList}}" wx:key="id" class="friend-list-item">
+          <view class="friend-info">
+            <text class="friend-userid">{{item.friendUserId}}</text>
+            <text class="friend-status" wx:if="{{item.status === 1}}">已添加</text>
+          </view>
+          <view class="friend-actions">
+            <view class="action-btn delete-friend-btn" bindtap="onDeleteFriend" data-friendid="{{item.friendUserId}}">
+              <text>删除</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 </view>

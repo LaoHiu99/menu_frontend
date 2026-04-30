@@ -401,17 +401,31 @@ page {
   border: 2rpx dashed #f0e0d0;
 }
 
+.request-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
 .request-info {
   display: flex;
   flex-direction: column;
   flex: 1;
 }
 
+.request-nickname {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 6rpx;
+}
+
 .request-userid {
-  font-size: 28rpx;
-  color: #6b5637;
-  font-weight: 500;
-  margin-bottom: 8rpx;
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 4rpx;
 }
 
 .request-time {
@@ -455,22 +469,30 @@ page {
   border: 2rpx dashed #f0e0d0;
 }
 
+.friend-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
 .friend-info {
   display: flex;
   flex-direction: column;
   flex: 1;
 }
 
-.friend-userid {
-  font-size: 28rpx;
-  color: #6b5637;
-  font-weight: 500;
-  margin-bottom: 8rpx;
+.friend-nickname {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 6rpx;
 }
 
-.friend-status {
-  font-size: 22rpx;
-  color: #8bc34a;
+.friend-userid {
+  font-size: 24rpx;
+  color: #999;
 }
 
 .delete-friend-btn {

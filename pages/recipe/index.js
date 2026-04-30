@@ -17,7 +17,8 @@ Page({
     searchResults: [],
     cartList: [],
     categories: [],
-    contentList: []
+    contentList: [],
+    loading: false
   },
   onChange(event) {
     this.setData({
@@ -43,6 +44,8 @@ Page({
   },
 
   async fetchCategories() {
+    this.setData({ loading: true });
+    
     try {
       const categories = await api.get('/category');
       
@@ -73,10 +76,12 @@ Page({
       this.setData({
         categories: formattedCategories,
         contentList: formattedContentList,
-        activeKey: 0
+        activeKey: 0,
+        loading: false
       });
     } catch (error) {
       console.error('获取分类失败:', error);
+      this.setData({ loading: false });
       wx.showToast({
         title: '加载失败，请重试',
         icon: 'none'
@@ -228,6 +233,8 @@ Page({
   },
 
   async searchFromServer(keyword) {
+    this.setData({ searchLoading: true });
+    
     try {
       const dishes = await api.get('/dish/search', { keyword });
       
@@ -247,13 +254,15 @@ Page({
 
       this.setData({
         isSearching: true,
-        searchResults: results
+        searchResults: results,
+        searchLoading: false
       });
     } catch (error) {
       console.error('搜索失败:', error);
       this.setData({
         isSearching: true,
-        searchResults: []
+        searchResults: [],
+        searchLoading: false
       });
     }
   },

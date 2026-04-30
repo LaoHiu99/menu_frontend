@@ -121,7 +121,9 @@
           <text class="empty-text">暂无好友请求</text>
         </view>
         <view wx:for="{{friendRequests}}" wx:key="id" class="friend-request-item">
+          <image class="request-avatar" src="{{item.avatarUrl || '/images/avator.png'}}" mode="aspectFill" />
           <view class="request-info">
+            <text class="request-nickname">{{item.nickname || item.userId}}</text>
             <text class="request-userid">{{item.userId}}</text>
             <text class="request-time">{{item.createdAt}}</text>
           </view>
@@ -150,9 +152,10 @@
           <text class="empty-text">暂无好友</text>
         </view>
         <view wx:for="{{friendList}}" wx:key="id" class="friend-list-item">
+          <image class="friend-avatar" src="{{item.avatarUrl || '/images/avator.png'}}" mode="aspectFill" />
           <view class="friend-info">
+            <text class="friend-nickname">{{item.nickname || item.friendUserId}}</text>
             <text class="friend-userid">{{item.friendUserId}}</text>
-            <text class="friend-status" wx:if="{{item.status === 1}}">已添加</text>
           </view>
           <view class="friend-actions">
             <view class="action-btn delete-friend-btn" bindtap="onDeleteFriend" data-friendid="{{item.friendUserId}}">

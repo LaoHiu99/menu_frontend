@@ -611,6 +611,43 @@
   letter-spacing: 20rpx;
 }
 
+.page-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(254, 249, 243, 0.9);
+  z-index: 9999;
+}
+
+.loading-spinner {
+  font-size: 80rpx;
+  animation: pawSpin 1s ease-in-out infinite;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #a0845e;
+  margin-top: 20rpx;
+}
+
+@keyframes pawSpin {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.2);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
 .fly-ball {
   position: fixed;
   width: 150rpx;

@@ -58,7 +58,7 @@
                 </view>
               </view>
             </view>
-            <view wx:if="{{searchResults.length === 0}}" class="search-empty">
+            <view wx:if="{{searchResults.length === 0 && !searchLoading}}" class="search-empty">
               <image class="search-empty-icon" src="/images/jiazai.png" mode="aspectFit" />
               <view class="search-empty-text">未找到相关菜品</view>
               <view class="search-empty-paw">🐾 🐾 🐾</view>
@@ -82,6 +82,10 @@
         </view>
         <view style="height: 170rpx;"></view>
       </scroll-view>
+    </view>
+    <view class="page-loading" wx:if="{{loading}}">
+      <view class="loading-spinner">🐾</view>
+      <view class="loading-text">加载中...</view>
     </view>
   </view>
   <image class="fly-ball" wx:if="{{showFlyBall}}" src="/images/icons/dog.png" mode="aspectFit" style="left: {{flyBallStartX - 25}}px; top: {{flyBallStartY - 25}}px;" animation="{{flyAnimation}}"></image>

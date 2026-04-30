@@ -5,7 +5,6 @@ Page({
   data: {
     cartList: [],
     remark: '',
-    totalAmount: 0,
     navBarHeight: 0,
     capsuleTop: 0,
     capsuleHeight: 0
@@ -17,14 +16,8 @@ Page({
     const cartList = wx.getStorageSync('pendingCartList');
     if (cartList && cartList.length > 0) {
       this.setData({ cartList });
-      this.calculateTotal(cartList);
       wx.removeStorageSync('pendingCartList');
     }
-  },
-
-  calculateTotal(cartList) {
-    const totalAmount = cartList.reduce((sum, item) => sum + (item.price * item.count), 0);
-    this.setData({ totalAmount: totalAmount.toFixed(2) });
   },
 
   onGoBack() {

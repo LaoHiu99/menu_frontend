@@ -11,6 +11,7 @@ Page({
       userId: ''
     },
     hasChange: false,
+    pendingAvatarTempPath: '',
     originalData: {},
     statusBarHeight: 0,
     navBarHeight: 0,
@@ -46,12 +47,12 @@ Page({
 
     this.setData({
       'userInfo.name': userInfo.nickname || '微信用户',
-      'userInfo.avatar': userInfo.avatarUrl || '/images/avator.png',
+      'userInfo.avatar': api.resolveMediaUrl(userInfo.avatarUrl),
       'userInfo.signature': userInfo.signature || '',
       'userInfo.userId': userInfo.userId,
       originalData: {
         name: userInfo.nickname || '微信用户',
-        avatar: userInfo.avatarUrl || '/images/avator.png',
+        avatar: api.resolveMediaUrl(userInfo.avatarUrl),
         signature: userInfo.signature || ''
       }
     });
@@ -65,11 +66,11 @@ Page({
 
       this.setData({
         'userInfo.name': profile.nickname || '微信用户',
-        'userInfo.avatar': profile.avatarUrl || '/images/avator.png',
+        'userInfo.avatar': api.resolveMediaUrl(profile.avatarUrl),
         'userInfo.signature': profile.signature || '',
         originalData: {
           name: profile.nickname || '微信用户',
-          avatar: profile.avatarUrl || '/images/avator.png',
+          avatar: api.resolveMediaUrl(profile.avatarUrl),
           signature: profile.signature || ''
         }
       });
@@ -83,6 +84,15 @@ Page({
     } catch (error) {
       console.error('获取用户详情失败:', error);
     }
+  },
+
+  onChooseAvatar(e) {
+    const url = e.detail.avatarUrl;
+    this.setData({
+      pendingAvatarTempPath: url,
+      'userInfo.avatar': url,
+      hasChange: true
+    });
   },
 
   onNameInput(e) {
@@ -101,10 +111,28 @@ Page({
 
   async onSave() {
     const { name, signature, userId } = this.data.userInfo;
+    const trimmedName = (name || '').trim();
+    const trimmedSig = (signature || '').trim();
 
-    if (!name || name.trim() === '') {
+    if (!trimmedName) {
       wx.showToast({
         title: '昵称不能为空',
+        icon: 'none'
+      });
+      return;
+    }
+
+    if (trimmedName.length > 10) {
+      wx.showToast({
+        title: '昵称最多10个字符',
+        icon: 'none'
+      });
+      return;
+    }
+
+    if (trimmedSig.length > 50) {
+      wx.showToast({
+        title: '个性签名最多50个字符',
         icon: 'none'
       });
       return;
@@ -115,23 +143,33 @@ Page({
     });
 
     try {
+      if (this.data.pendingAvatarTempPath) {
+        await api.uploadFile({
+          url: '/user/avatar',
+          filePath: this.data.pendingAvatarTempPath
+        });
+      }
+
       await api.put(`/user/profile/${userId}`, {
-        nickname: name.trim(),
-        signature: signature.trim()
+        nickname: trimmedName,
+        signature: trimmedSig
       });
 
       const userInfo = wx.getStorageSync('userInfo');
       wx.setStorageSync('userInfo', {
         ...userInfo,
-        nickname: name.trim(),
-        signature: signature.trim()
+        nickname: trimmedName,
+        signature: trimmedSig
       });
 
+      await this.fetchUserProfile(userId);
+
       this.setData({
+        pendingAvatarTempPath: '',
         originalData: {
-          name: name.trim(),
+          name: trimmedName,
           avatar: this.data.userInfo.avatar,
-          signature: signature.trim()
+          signature: trimmedSig
         },
         hasChange: false
       });

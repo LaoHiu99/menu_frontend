@@ -4,18 +4,42 @@ const api = require('../../utils/api');
 Page({
   data: {
     cartList: [],
+    totalAmount: '0.00',
     remark: '',
     navBarHeight: 0,
     capsuleTop: 0,
     capsuleHeight: 0
   },
 
+  formatMoney(n) {
+    const num = Number(n);
+    if (Number.isNaN(num)) return '0.00';
+    return num.toFixed(2);
+  },
+
+  applyCartList(cartList) {
+    const list = (cartList || []).map((item) => {
+      const line = Number(item.price) * Number(item.count);
+      return {
+        ...item,
+        subtotal: this.formatMoney(line)
+      };
+    });
+    const total = list.reduce((sum, item) => {
+      return sum + Number(item.price) * Number(item.count);
+    }, 0);
+    this.setData({
+      cartList: list,
+      totalAmount: this.formatMoney(total)
+    });
+  },
+
   onLoad(options) {
     setNavHeightToPage(this);
-    
+
     const cartList = wx.getStorageSync('pendingCartList');
     if (cartList && cartList.length > 0) {
-      this.setData({ cartList });
+      this.applyCartList(cartList);
       wx.removeStorageSync('pendingCartList');
     }
   },
@@ -61,13 +85,16 @@ Page({
       price: item.price
     }));
 
-    const totalAmount = this.data.cartList.reduce((sum, item) => sum + (item.price * item.count), 0);
+    const totalAmount = this.data.cartList.reduce(
+      (sum, item) => sum + Number(item.price) * Number(item.count),
+      0
+    );
 
     const orderData = {
       userId: userInfo.userId,
       items: items,
-      totalAmount: totalAmount,
-      remark: this.data.remark
+      totalAmount,
+      remark: this.data.remark.trim()
     };
 
     wx.showLoading({

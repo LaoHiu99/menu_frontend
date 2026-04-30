@@ -111,6 +111,29 @@ page {
   justify-content: flex-end;
 }
 
+.item-value-avatar {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.avatar-choose-wrap {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  line-height: 1;
+}
+
+.avatar-choose-wrap::after {
+  border: none;
+}
+
+.avatar-tip {
+  font-size: 22rpx;
+  color: #a0845e;
+  margin-top: 12rpx;
+}
+
 .avatar-preview {
   width: 120rpx;
   height: 120rpx;

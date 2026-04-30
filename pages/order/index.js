@@ -29,11 +29,10 @@ Page({
 
   onShow() {
     setNavHeightToPage(this);
-    
+
     const savedTab = wx.getStorageSync('orderTab');
-    
-    if (savedTab !== undefined && savedTab !== null) {
-      this.initPage(Number(savedTab));
+    if (savedTab === 0 || savedTab === 1) {
+      this.initPage(savedTab);
       wx.removeStorageSync('orderTab');
     }
   },
@@ -47,6 +46,7 @@ Page({
 
   // 初始化页面数据
   initPage(tab = 0) {
+    this._fetchOrdersLocked = false;
     this.setData({
       activeTab: tab,
       page: 1,
@@ -59,8 +59,14 @@ Page({
   },
 
   async fetchOrders() {
-    if (this.data.loading || !this.data.hasMore) return;
+    if (this._fetchOrdersLocked) {
+      return;
+    }
+    if (!this.data.hasMore && this.data.page > 1) {
+      return;
+    }
 
+    this._fetchOrdersLocked = true;
     this.setData({ loading: true });
 
     try {
@@ -70,18 +76,20 @@ Page({
         return;
       }
 
+      const requestPage = this.data.page;
       const status = this.data.activeTab === 0 ? 0 : 1;
       const result = await api.get(`/order/user/${userInfo.userId}`, {
         status: status,
-        page: this.data.page,
-        pageSize: this.data.pageSize
+        page: requestPage,
+        pageSize: this.data.pageSize,
+        includeFriends: true
       });
 
       const formattedOrders = result.list.map(order => ({
         id: order.id,
         orderNo: order.orderNo,
         username: order.username,
-        avatar: order.avatar || '/images/icons/avator.jpg',
+        avatar: api.resolveMediaUrl(order.avatar),
         totalAmount: order.totalAmount,
         remark: order.remark,
         status: order.status === 0 ? '未完成' : '已完成',
@@ -96,14 +104,17 @@ Page({
         }))
       }));
 
-      const newOrders = [...this.data.orders, ...formattedOrders];
+      const newOrders =
+        requestPage === 1
+          ? formattedOrders
+          : [...this.data.orders, ...formattedOrders];
 
       this.setData({
         orders: newOrders,
         currentOrders: newOrders,
         total: result.total,
         totalPages: result.totalPages,
-        hasMore: this.data.page < result.totalPages,
+        hasMore: requestPage < result.totalPages,
         loading: false
       });
 
@@ -121,6 +132,8 @@ Page({
     } catch (error) {
       console.error('获取订单失败:', error);
       this.setData({ loading: false });
+    } finally {
+      this._fetchOrdersLocked = false;
     }
   },
 

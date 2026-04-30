@@ -1,17 +1,14 @@
-<view class="container" style="padding-top: {{navBarHeight}}px;">
-  <!-- 自定义导航栏（固定定位） -->
-  <view class="custom-nav" style="height: {{navBarHeight}}px;">
-    <!-- 返回按钮 - 与胶囊按钮对齐 -->
-    <view class="header-back" style="top: {{capsuleTop}}px; height: {{capsuleHeight}}px; line-height: {{capsuleHeight}}px;" bindtap="onGoBack">
-      <text class="back-text">‹</text>
+<!-- 与全局 custom 导航对齐：占位 + 页面内头部 -->
+<view class="nav-placeholder" style="height: {{navBarHeight}}px;"></view>
+<view class="container">
+  <view class="confirm-header">
+    <view class="back-btn" bindtap="onGoBack">
+      <text class="back-arrow">←</text>
     </view>
-    <!-- 标题 - 与胶囊按钮对齐 -->
-    <view class="header-title" style="top: {{capsuleTop}}px; height: {{capsuleHeight}}px; line-height: {{capsuleHeight}}px;">
-      下单
-    </view>
+    <view class="header-title">下单</view>
   </view>
-  <!-- 页面主要内容 -->
-  <view class="order-goods">
+
+  <view class="confirm-card">
     <view class="section-title">已选商品</view>
     <view class="goods-list">
       <view class="goods-item" wx:for="{{cartList}}" wx:key="id">
@@ -25,23 +22,35 @@
         </view>
         <view class="goods-subtotal">
           <view class="subtotal-label">小计</view>
-          <view class="subtotal-amount">¥{{item.price * item.count}}</view>
+          <view class="subtotal-amount">¥{{item.subtotal}}</view>
         </view>
       </view>
     </view>
-  </view>
-  <view class="total-section">
-    <view class="total-row">
+    <view class="total-section">
       <view class="total-label">合计</view>
       <view class="total-amount">¥{{totalAmount}}</view>
     </view>
   </view>
-  <view class="remark-section">
-    <view class="section-title">备注</view>
-    <textarea class="remark-input" placeholder="请输入备注信息（如：少辣、多加葱等）" value="{{remark}}" bindinput="onRemarkInput" maxlength="200" />
-    <view class="remark-count">{{remark.length}}/200</view>
+
+  <view class="confirm-card remark-card">
+    <view class="remark-head">
+      <view class="section-title remark-section-title">备注</view>
+      <view class="remark-count">{{remark.length}}/200</view>
+    </view>
+    <textarea
+      class="remark-input"
+      placeholder="口味偏好、忌口等（选填）～"
+      placeholder-class="remark-placeholder"
+      value="{{remark}}"
+      maxlength="200"
+      bindinput="onRemarkInput"
+      auto-height
+    />
   </view>
-  <view class="bottom-bar">
-    <view class="submit-btn" bindtap="onSubmitOrder">提交订单</view>
-  </view>
+
+  <view class="page-bottom-spacer"></view>
+</view>
+
+<view class="bottom-bar">
+  <view class="submit-btn" bindtap="onSubmitOrder">提交订单</view>
 </view>

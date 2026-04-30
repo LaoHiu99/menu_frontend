@@ -1,7 +1,7 @@
 <!-- 自定义导航栏占位 -->
 <view class="nav-placeholder" style="height: {{navBarHeight}}px;"></view>
 <view class="container">
-  <view class="tab-bar">
+  <view class="tab-bar" style="top: {{navBarHeight}}px;">
     <view class="tab-item {{activeTab === 0 ? 'active' : ''}}" bindtap="onTabChange" data-tab="0">
       <text>未完成</text>
       <view class="tab-badge" wx:if="{{unfinishedCount > 0}}">{{unfinishedCount}}</view>

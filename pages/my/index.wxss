@@ -43,6 +43,28 @@ page {
   opacity: 0.7;
 }
 
+.login-hint {
+  font-size: 22rpx;
+  color: #a0845e;
+  margin-bottom: 20rpx;
+  line-height: 1.5;
+}
+
+.wx-login-submit-btn {
+  width: 100%;
+  font-size: 28rpx;
+  padding: 20rpx;
+  background: linear-gradient(135deg, #e8c9a8 0%, #d4a574 100%);
+  color: #fff;
+  border-radius: 999rpx;
+  border: none;
+  font-weight: bold;
+}
+
+.wx-login-submit-btn::after {
+  border: none;
+}
+
 @keyframes profileDogWave {
   0%,
   100% {
@@ -58,6 +80,7 @@ page {
 
 .profile-info {
   flex: 1;
+  min-width: 0;
 }
 
 .profile-name {
@@ -65,12 +88,18 @@ page {
   font-weight: bold;
   color: #6b5637;
   margin-bottom: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .profile-signature {
   font-size: 24rpx;
   color: #a0845e;
   line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .profile-userid {

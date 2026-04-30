@@ -2,18 +2,24 @@
 <view class="nav-placeholder" style="height: {{navBarHeight}}px;"></view>
 <view class="container">
   <view class="profile-section">
-    <button wx:if="{{!isLogin}}" class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+    <button wx:if="{{!isLogin}}" class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onPickAvatarThenLogin">
       <image class="profile-dog" src="{{userInfo.avatar}}" mode="aspectFit" />
     </button>
     <image wx:else class="profile-dog" src="{{userInfo.avatar}}" mode="aspectFit" />
     <view class="profile-info">
-      <view class="profile-name">{{userInfo.name}}</view>
-      <view class="profile-signature">{{userInfo.signature}}</view>
-      <view class="profile-userid" bindtap="onCopyUserId" wx:if="{{isLogin}}">
-        <text class="userid-label">ID:</text>
-        <text class="userid-text">{{userInfo.userId}}</text>
-        <text class="userid-copy-icon">📋</text>
-      </view>
+      <block wx:if="{{!isLogin}}">
+        <view class="login-hint">点击左侧头像或下方按钮登录</view>
+        <button class="wx-login-submit-btn" open-type="chooseAvatar" bind:chooseavatar="onPickAvatarThenLogin">微信登录</button>
+      </block>
+      <block wx:else>
+        <view class="profile-name">{{userInfo.name}}</view>
+        <view class="profile-signature">{{userInfo.signature}}</view>
+        <view class="profile-userid" bindtap="onCopyUserId">
+          <text class="userid-label">ID:</text>
+          <text class="userid-text">{{userInfo.userId}}</text>
+          <text class="userid-copy-icon">📋</text>
+        </view>
+      </block>
     </view>
   </view>
   <view class="stats-section">

@@ -51,7 +51,7 @@
                 <view class="item-paws">🐾🐾🐾🐾🐾</view>
                 <view class="item-bottom">
                   <view class="item-price">
-                    <text class="paw-icon">🐶</text>
+                    <text class="paw-icon">💰</text>
                     <text class="price-num">{{item.price}}</text>
                   </view>
                   <image class="item-add" id="add-search-{{index}}" src="/images/icons/add.png" mode="aspectFit" bindtap="onAddSearchResultToCart" data-index="{{index}}" data-category-index="{{item.categoryIndex}}" data-item-index="{{item.itemIndex}}" />

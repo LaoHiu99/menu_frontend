@@ -12,8 +12,11 @@
     <!-- 头像展示 -->
     <view class="profile-item">
       <view class="item-label">头像</view>
-      <view class="item-value">
-        <image class="avatar-preview" src="{{userInfo.avatar}}" mode="aspectFill" />
+      <view class="item-value item-value-avatar">
+        <button class="avatar-choose-wrap" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+          <image class="avatar-preview" src="{{userInfo.avatar}}" mode="aspectFill" />
+        </button>
+        <view class="avatar-tip">点击头像更换</view>
       </view>
     </view>
 
@@ -21,12 +24,13 @@
     <view class="profile-item">
       <view class="item-label">昵称</view>
       <view class="item-value">
-        <input 
-          class="nickname-input" 
-          value="{{userInfo.name}}" 
-          bindinput="onNameInput" 
+        <input
+          class="nickname-input"
+          type="nickname"
+          value="{{userInfo.name}}"
+          bindinput="onNameInput"
           placeholder="请输入昵称"
-          maxlength="20"
+          maxlength="10"
         />
       </view>
     </view>
@@ -40,7 +44,7 @@
           value="{{userInfo.signature}}" 
           bindinput="onSignatureInput" 
           placeholder="写点什么介绍一下自己吧~"
-          maxlength="100"
+          maxlength="50"
           auto-height
         />
       </view>

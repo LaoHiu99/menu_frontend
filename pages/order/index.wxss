@@ -8,6 +8,8 @@ page {
 }
 
 .tab-bar {
+  position: sticky;
+  z-index: 100;
   display: flex;
   background-color: #fff;
   padding: 20rpx 40rpx;
@@ -146,12 +148,13 @@ page {
   border-bottom: 2rpx dashed #f0e0d0;
 }
 
+/* 商品行：与下单确认页 order-confirm 一致 */
 .order-goods-item {
   display: flex;
   align-items: center;
-  padding: 16rpx;
-  margin-bottom: 12rpx;
-  background-color: #fef9f3;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+  background: linear-gradient(135deg, #fff5eb 0%, #fef9f3 100%);
   border-radius: 16rpx;
   border: 2rpx dashed #f0e0d0;
 }
@@ -161,9 +164,9 @@ page {
 }
 
 .order-goods-image {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 16rpx;
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 20rpx;
   flex-shrink: 0;
   margin-right: 20rpx;
   border: 2rpx solid #f5e6d8;
@@ -171,50 +174,61 @@ page {
 
 .order-goods-info {
   flex: 1;
+  min-width: 0;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12rpx;
 }
 
 .order-goods-name {
   font-size: 28rpx;
   color: #6b5637;
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .order-goods-detail {
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
 .order-goods-count {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: #a0845e;
-  background-color: #fff5eb;
+  background-color: rgba(255, 255, 255, 0.9);
   padding: 6rpx 14rpx;
   border-radius: 16rpx;
+  border: 2rpx dashed #f0e0d0;
 }
 
 .order-goods-price {
   font-size: 28rpx;
   color: #8b6f47;
+  font-weight: 500;
 }
 
 .order-goods-subtotal {
+  flex-shrink: 0;
   text-align: right;
   margin-left: 16rpx;
+  padding-left: 12rpx;
+  border-left: 2rpx dashed #f0e0d0;
 }
 
-.subtotal-label {
+.order-goods-subtotal .subtotal-label {
   font-size: 22rpx;
   color: #a0845e;
 }
 
-.subtotal-amount {
+.order-goods-subtotal .subtotal-amount {
   font-size: 26rpx;
   color: #8b6f47;
-  font-weight: 500;
+  font-weight: 600;
+  margin-top: 4rpx;
 }
 
 .order-total {

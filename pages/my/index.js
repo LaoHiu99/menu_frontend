@@ -7,7 +7,7 @@ Page({
     userInfo: {
       name: '未登录',
       avatar: '/images/avator.png',
-      userId: '点击头像登录'
+      userId: '选头像登录'
     },
     isLogin: false,
     stats: {
@@ -34,6 +34,7 @@ Page({
       { id: 8, name: '设置', icon: '⚙️' }
     ],
     dailyQuote: '每一天都要开开心心的~',
+    pendingAvatarTempPath: '',
     statusBarHeight: 0,
     navBarHeight: 0,
     capsuleHeight: 0,
@@ -60,7 +61,7 @@ Page({
     if (userInfo && token) {
       this.setData({
         'userInfo.name': userInfo.nickname || '小白',
-        'userInfo.avatar': userInfo.avatarUrl || '/images/avator.png',
+        'userInfo.avatar': api.resolveMediaUrl(userInfo.avatarUrl),
         'userInfo.userId': userInfo.userId,
         'userInfo.signature': userInfo.signature || '这个人很懒，什么都没留下~',
         isLogin: true
@@ -69,10 +70,12 @@ Page({
       this.fetchUserProfile(userInfo.userId);
       this.fetchFriendStats(userInfo.userId);
     } else {
+      const pending =
+        this._pendingAvatarTempPath || this.data.pendingAvatarTempPath;
       this.setData({
         'userInfo.name': '未登录',
-        'userInfo.avatar': '/images/avator.png',
-        'userInfo.userId': '点击头像登录',
+        'userInfo.avatar': pending || '/images/avator.png',
+        'userInfo.userId': '登录后显示',
         'userInfo.signature': '',
         isLogin: false
       });
@@ -87,7 +90,7 @@ Page({
       
       this.setData({
         'userInfo.name': profile.nickname || '微信用户',
-        'userInfo.avatar': profile.avatarUrl || '/images/avator.png',
+        'userInfo.avatar': api.resolveMediaUrl(profile.avatarUrl),
         'userInfo.userId': profile.userId,
         'userInfo.signature': profile.signature || '这个人很懒，什么都没留下~',
         'stats.orders': orderCount.total,
@@ -106,49 +109,73 @@ Page({
     }
   },
 
-  onChooseAvatar(e) {
-    const avatarUrl = e.detail.avatarUrl;
-    this.setData({ 'userInfo.avatar': avatarUrl });
-    this.doLogin();
+  async onPickAvatarThenLogin(e) {
+    const tempPath = e.detail?.avatarUrl;
+    if (!tempPath) {
+      wx.showToast({
+        title: '未获取到头像，请重试',
+        icon: 'none'
+      });
+      return;
+    }
+
+    if (this._loginInProgress) {
+      return;
+    }
+    this._loginInProgress = true;
+
+    this._pendingAvatarTempPath = tempPath;
+    this.setData({
+      pendingAvatarTempPath: tempPath,
+      'userInfo.avatar': tempPath
+    });
+
+    try {
+      await this.runLoginWithAvatar(tempPath);
+    } finally {
+      this._loginInProgress = false;
+    }
   },
 
-  async doLogin() {
+  async runLoginWithAvatar(tempPath) {
     wx.showLoading({
       title: '登录中...'
     });
 
     try {
       const loginRes = await this.wxLogin();
-      
       const result = await api.post('/user/login', {
-        code: loginRes.code,
-        nickname: this.data.userInfo.name === '未登录' ? '微信用户' : this.data.userInfo.name,
-        avatarUrl: this.data.userInfo.avatar
+        code: loginRes.code
       });
 
       wx.setStorageSync('token', result.token);
-      wx.setStorageSync('userInfo', result.user);
 
-      const app = getApp();
-      app.setLoginInfo(result.token, result.user);
+      await api.uploadFile({
+        url: '/user/avatar',
+        filePath: tempPath
+      });
+
+      this._pendingAvatarTempPath = '';
 
       this.setData({
-        'userInfo.name': result.user.nickname,
-        'userInfo.avatar': result.user.avatarUrl,
-        'userInfo.userId': result.user.userId,
-        'userInfo.signature': result.user.signature || '这个人很懒，什么都没留下~',
+        pendingAvatarTempPath: '',
         isLogin: true
       });
 
-      this.fetchUserProfile(result.user.userId);
+      await this.fetchUserProfile(result.user.userId);
+      this.fetchFriendStats(result.user.userId);
+
+      const app = getApp();
+      app.setLoginInfo(
+        wx.getStorageSync('token'),
+        wx.getStorageSync('userInfo')
+      );
 
       wx.hideLoading();
-
       wx.showToast({
         title: '登录成功',
         icon: 'success'
       });
-
     } catch (error) {
       wx.hideLoading();
       console.error('登录失败:', error);
@@ -342,7 +369,11 @@ Page({
   async fetchFriendRequests() {
     try {
       const requests = await api.get(`/friend/requests/${this.data.userInfo.userId}`);
-      this.setData({ friendRequests: requests || [] });
+      const mapped = (requests || []).map((r) => ({
+        ...r,
+        avatarUrl: api.resolveMediaUrl(r.avatarUrl)
+      }));
+      this.setData({ friendRequests: mapped });
     } catch (error) {
       console.error('获取好友请求失败:', error);
       wx.showToast({
@@ -419,7 +450,11 @@ Page({
   async fetchFriendList() {
     try {
       const friends = await api.get(`/friend/list/${this.data.userInfo.userId}`);
-      this.setData({ friendList: friends || [] });
+      const mapped = (friends || []).map((f) => ({
+        ...f,
+        avatarUrl: api.resolveMediaUrl(f.avatarUrl)
+      }));
+      this.setData({ friendList: mapped });
     } catch (error) {
       console.error('获取好友列表失败:', error);
       wx.showToast({
@@ -438,7 +473,7 @@ Page({
       success: async (res) => {
         if (res.confirm) {
           try {
-            await api.delete(`/friend/${friendId}`, {
+            await api.delete(`/friend/user/${encodeURIComponent(friendId)}`, {
               params: { userId: this.data.userInfo.userId }
             });
 
@@ -474,8 +509,11 @@ Page({
         if (res.confirm) {
           const app = getApp();
           app.logout();
-          
+
+          this._pendingAvatarTempPath = '';
+
           this.setData({
+            pendingAvatarTempPath: '',
             'stats.orders': 0,
             'stats.pendingOrders': 0,
             'stats.completedOrders': 0,

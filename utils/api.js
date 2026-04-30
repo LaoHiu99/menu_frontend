@@ -83,11 +83,19 @@ function request(options) {
           });
           reject(new Error('登录已过期，请重新登录'));
         } else {
-          reject(new Error(res.data.message || '请求失败'));
+          const body = res.data && typeof res.data === 'object' ? res.data : {};
+          const raw = body.message != null ? body.message : body.error;
+          const text =
+            Array.isArray(raw) ? raw.join('; ') : raw != null && raw !== '' ? String(raw) : `请求失败(${res.statusCode})`;
+          reject(new Error(text));
         }
       },
       fail: (err) => {
-        reject(err);
+        const msg =
+          (err && err.errMsg) ||
+          (typeof err === 'string' ? err : '') ||
+          '网络异常，请检查服务器是否可访问及开发者工具「不校验合法域名」';
+        reject(new Error(msg));
       }
     });
   });

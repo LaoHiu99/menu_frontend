@@ -308,17 +308,49 @@ page {
 
 .modal-content {
   width: 80%;
+  max-width: 100%;
+  box-sizing: border-box;
   background-color: #fff;
   border-radius: 32rpx;
   padding: 40rpx;
   box-shadow: 0 8rpx 32rpx rgba(139, 111, 71, 0.2);
   border: 4rpx dashed #f0e0d0;
+  overflow: hidden;
 }
 
 .modal-large {
   width: 85%;
+  max-width: 100%;
+  box-sizing: border-box;
   max-height: 80vh;
   overflow-y: auto;
+}
+
+.modal-friends-sheet {
+  width: 90%;
+  max-width: 90%;
+}
+
+/* 好友请求：整弹窗限高，仅列表区域滚动，标题与关闭固定在顶部 */
+.modal-friend-requests-wrap {
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+  overflow: hidden;
+}
+
+.modal-friend-requests-scroll {
+  width: 100%;
+  box-sizing: border-box;
+  /* 留出标题、内边距；列表超出在此区域内滚动 */
+  height: calc(80vh - 200px);
+  max-height: calc(80vh - 200px);
+}
+
+.modal-friend-requests-inner {
+  margin-bottom: 0;
+  min-width: 0;
+  padding-bottom: 24rpx;
 }
 
 .modal-header {
@@ -328,6 +360,11 @@ page {
   margin-bottom: 32rpx;
   padding-bottom: 20rpx;
   border-bottom: 2rpx dashed #f0e0d0;
+}
+
+.modal-header.modal-friend-requests-header {
+  flex-shrink: 0;
+  margin-bottom: 24rpx;
 }
 
 .modal-title {
@@ -350,6 +387,11 @@ page {
 
 .modal-body {
   margin-bottom: 32rpx;
+  min-width: 0;
+}
+
+.modal-body.modal-friend-requests-inner {
+  margin-bottom: 0;
 }
 
 .modal-footer {
@@ -380,6 +422,9 @@ page {
 
 .input-group {
   margin-bottom: 24rpx;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .input-label {
@@ -392,7 +437,11 @@ page {
 
 .friend-id-input {
   width: 100%;
-  padding: 20rpx 24rpx;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 96rpx;
+  padding: 28rpx 24rpx;
+  line-height: 1.45;
   background-color: #fef9f3;
   border-radius: 16rpx;
   font-size: 28rpx;
@@ -421,40 +470,55 @@ page {
 
 .friend-request-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24rpx;
-  margin-bottom: 16rpx;
-  background-color: #fef9f3;
-  border-radius: 16rpx;
-  border: 2rpx dashed #f0e0d0;
+  flex-direction: column;
+  padding: 28rpx 24rpx;
+  margin-bottom: 20rpx;
+  background: linear-gradient(145deg, #fffefd 0%, #fef9f3 100%);
+  border-radius: 20rpx;
+  border: 2rpx solid rgba(240, 224, 208, 0.9);
+  box-shadow: 0 4rpx 16rpx rgba(139, 111, 71, 0.06);
+}
+
+.request-card-top {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 24rpx;
 }
 
 .request-avatar {
-  width: 80rpx;
-  height: 80rpx;
+  width: 96rpx;
+  height: 96rpx;
   border-radius: 50%;
-  margin-right: 20rpx;
+  margin-right: 24rpx;
   flex-shrink: 0;
+  border: 3rpx solid #f5e6d8;
 }
 
 .request-info {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
 }
 
 .request-nickname {
-  font-size: 30rpx;
+  font-size: 32rpx;
   color: #333;
   font-weight: 600;
-  margin-bottom: 6rpx;
+  margin-bottom: 10rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .request-userid {
   font-size: 24rpx;
-  color: #999;
-  margin-bottom: 4rpx;
+  color: #888;
+  margin-bottom: 8rpx;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .request-time {
@@ -462,9 +526,36 @@ page {
   color: #a0845e;
 }
 
-.request-actions {
+.request-actions-row {
   display: flex;
-  gap: 12rpx;
+  flex-direction: row;
+  gap: 20rpx;
+}
+
+.request-action-btn {
+  flex: 1;
+  padding: 22rpx 16rpx;
+  border-radius: 999rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.request-action-btn:active {
+  opacity: 0.85;
+}
+
+.request-action-btn.reject-outline {
+  background-color: #fff;
+  color: #a0845e;
+  border: 2rpx solid #e8d8c8;
+}
+
+.request-action-btn.accept-primary {
+  background: linear-gradient(135deg, #f3ca7e 0%, #e8b86d 100%);
+  color: #fff;
+  border: 2rpx solid #e8b86d;
 }
 
 .action-btn {

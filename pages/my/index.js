@@ -2,6 +2,24 @@
 const { setNavHeightToPage } = require('../../utils/navHeight.js');
 const api = require('../../utils/api');
 
+function encodePathSegment(seg) {
+  return encodeURIComponent(String(seg ?? '').trim());
+}
+
+function asFriendArray(raw) {
+  if (raw == null) return [];
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'string') {
+    try {
+      const p = JSON.parse(raw);
+      return Array.isArray(p) ? p : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 Page({
   data: {
     userInfo: {
@@ -84,7 +102,7 @@ Page({
 
   async fetchUserProfile(userId) {
     try {
-      const profile = await api.get(`/user/profile/${userId}`);
+      const profile = await api.get(`/user/profile/${encodePathSegment(userId)}`);
       
       const orderCount = profile.orderCount || { pending: 0, completed: 0, total: 0 };
       
@@ -271,14 +289,18 @@ Page({
 
   async fetchFriendStats(userId) {
     if (!userId) return;
-    
+    const uid = String(userId).trim();
+    if (!uid || uid === '登录后显示' || uid === '选头像登录') return;
+
     try {
-      const requests = await api.get(`/friend/requests/${userId}`);
-      const friends = await api.get(`/friend/list/${userId}`);
-      
+      const requests = await api.get(`/friend/requests/${encodePathSegment(uid)}`);
+      const friends = await api.get(`/friend/list/${encodePathSegment(uid)}`);
+      const reqLen = asFriendArray(requests).length;
+      const friendLen = asFriendArray(friends).length;
+
       this.setData({
-        'friendStats.requestCount': requests.length || 0,
-        'friendStats.friendCount': friends.length || 0
+        'friendStats.requestCount': reqLen,
+        'friendStats.friendCount': friendLen
       });
     } catch (error) {
       console.error('获取好友统计失败:', error);
@@ -308,7 +330,8 @@ Page({
   },
 
   async onSendFriendRequest() {
-    if (!this.data.friendIdInput.trim()) {
+    const friendId = this.data.friendIdInput.trim();
+    if (!friendId) {
       wx.showToast({
         title: '请输入好友ID',
         icon: 'none'
@@ -316,7 +339,7 @@ Page({
       return;
     }
 
-    if (this.data.friendIdInput === this.data.userInfo.userId) {
+    if (friendId === this.data.userInfo.userId) {
       wx.showToast({
         title: '不能添加自己为好友',
         icon: 'none'
@@ -327,7 +350,7 @@ Page({
     try {
       await api.post('/friend/request', {
         userId: this.data.userInfo.userId,
-        friendUserId: this.data.friendIdInput
+        friendUserId: friendId
       });
 
       wx.showToast({
@@ -343,9 +366,13 @@ Page({
       this.fetchFriendStats(this.data.userInfo.userId);
     } catch (error) {
       console.error('发送好友请求失败:', error);
-      wx.showToast({
-        title: error.message || '发送失败，请重试',
-        icon: 'none'
+      const msg =
+        (error && error.message) || (typeof error === 'string' ? error : '') || '发送失败，请重试';
+      wx.showModal({
+        title: '提示',
+        content: msg,
+        showCancel: false,
+        confirmText: '知道了'
       });
     }
   },
@@ -354,6 +381,14 @@ Page({
     if (!this.data.isLogin) {
       wx.showToast({
         title: '请先登录',
+        icon: 'none'
+      });
+      return;
+    }
+    const uid = String(this.data.userInfo.userId || '').trim();
+    if (!uid || uid === '登录后显示' || uid === '选头像登录') {
+      wx.showToast({
+        title: '用户信息未就绪，请下拉刷新重试',
         icon: 'none'
       });
       return;
@@ -367,9 +402,15 @@ Page({
   },
 
   async fetchFriendRequests() {
+    const uid = String(this.data.userInfo.userId || '').trim();
+    if (!uid || uid === '登录后显示' || uid === '选头像登录') {
+      this.setData({ friendRequests: [] });
+      return;
+    }
     try {
-      const requests = await api.get(`/friend/requests/${this.data.userInfo.userId}`);
-      const mapped = (requests || []).map((r) => ({
+      const requests = await api.get(`/friend/requests/${encodePathSegment(uid)}`);
+      const list = asFriendArray(requests);
+      const mapped = list.map((r) => ({
         ...r,
         avatarUrl: api.resolveMediaUrl(r.avatarUrl)
       }));
@@ -377,7 +418,7 @@ Page({
     } catch (error) {
       console.error('获取好友请求失败:', error);
       wx.showToast({
-        title: '获取好友请求失败',
+        title: (error && error.message) || '获取好友请求失败',
         icon: 'none'
       });
     }
@@ -385,7 +426,7 @@ Page({
 
   async onAcceptFriendRequest(e) {
     const id = e.currentTarget.dataset.id;
-    
+
     try {
       await api.put(`/friend/request/${id}/accept`, null, {
         params: { userId: this.data.userInfo.userId }
@@ -409,7 +450,7 @@ Page({
 
   async onRejectFriendRequest(e) {
     const id = e.currentTarget.dataset.id;
-    
+
     try {
       await api.put(`/friend/request/${id}/reject`, null, {
         params: { userId: this.data.userInfo.userId }
@@ -439,6 +480,14 @@ Page({
       });
       return;
     }
+    const uid = String(this.data.userInfo.userId || '').trim();
+    if (!uid || uid === '登录后显示' || uid === '选头像登录') {
+      wx.showToast({
+        title: '用户信息未就绪，请下拉刷新重试',
+        icon: 'none'
+      });
+      return;
+    }
     this.fetchFriendList();
     this.setData({ showFriendListModal: true });
   },
@@ -448,25 +497,33 @@ Page({
   },
 
   async fetchFriendList() {
+    const uid = String(this.data.userInfo.userId || '').trim();
+    if (!uid || uid === '登录后显示' || uid === '选头像登录') {
+      this.setData({ friendList: [] });
+      return;
+    }
     try {
-      const friends = await api.get(`/friend/list/${this.data.userInfo.userId}`);
-      const mapped = (friends || []).map((f) => ({
+      const friends = await api.get(`/friend/list/${encodePathSegment(uid)}`);
+      const list = asFriendArray(friends);
+      const mapped = list.map((f) => ({
         ...f,
         avatarUrl: api.resolveMediaUrl(f.avatarUrl)
       }));
       this.setData({ friendList: mapped });
     } catch (error) {
       console.error('获取好友列表失败:', error);
+      const msg = (error && error.message) || '获取好友列表失败';
       wx.showToast({
-        title: '获取好友列表失败',
-        icon: 'none'
+        title: msg.length > 24 ? '获取好友列表失败' : msg,
+        icon: 'none',
+        duration: 2500
       });
     }
   },
 
   async onDeleteFriend(e) {
     const friendId = e.currentTarget.dataset.friendid;
-    
+
     wx.showModal({
       title: '提示',
       content: '确定要删除该好友吗？',

@@ -114,40 +114,49 @@
       </view>
     </view>
   </view>
-  <!-- 好友请求列表弹窗 -->
+  <!-- 好友请求列表弹窗：标题栏固定，列表区限高滚动 -->
   <view class="modal-mask" wx:if="{{showFriendRequestsModal}}" bindtap="onCloseFriendRequestsModal">
-    <view class="modal-content modal-large" catchtap="stopPropagation">
-      <view class="modal-header">
+    <view class="modal-content modal-friends-sheet modal-friend-requests-wrap" catchtap="stopPropagation">
+      <view class="modal-header modal-friend-requests-header">
         <text class="modal-title">好友请求</text>
         <view class="modal-close" bindtap="onCloseFriendRequestsModal">✕</view>
       </view>
-      <view class="modal-body">
-        <view wx:if="{{friendRequests.length === 0}}" class="empty-requests">
-          <text class="empty-icon">📭</text>
-          <text class="empty-text">暂无好友请求</text>
-        </view>
-        <view wx:for="{{friendRequests}}" wx:key="id" class="friend-request-item">
-          <image class="request-avatar" src="{{item.avatarUrl || '/images/avator.png'}}" mode="aspectFill" />
-          <view class="request-info">
-            <text class="request-nickname">{{item.nickname || item.userId}}</text>
-            <text class="request-userid">{{item.userId}}</text>
-            <text class="request-time">{{item.createdAt}}</text>
+      <scroll-view
+        class="modal-friend-requests-scroll"
+        scroll-y="{{true}}"
+        enable-back-to-top="{{true}}"
+        bounces="{{true}}"
+      >
+        <view class="modal-body modal-friend-requests-inner">
+          <view wx:if="{{friendRequests.length === 0}}" class="empty-requests">
+            <text class="empty-icon">📭</text>
+            <text class="empty-text">暂无好友请求</text>
           </view>
-          <view class="request-actions">
-            <view class="action-btn accept-btn" bindtap="onAcceptFriendRequest" data-id="{{item.id}}">
-              <text>接受</text>
+          <view wx:for="{{friendRequests}}" wx:key="id" class="friend-request-item">
+            <view class="request-card-top">
+              <image class="request-avatar" src="{{item.avatarUrl || '/images/avator.png'}}" mode="aspectFill" />
+              <view class="request-info">
+                <text class="request-nickname">{{item.nickname || item.userId}}</text>
+                <text class="request-userid" selectable>{{item.userId}}</text>
+                <text class="request-time">{{item.createdAt}}</text>
+              </view>
             </view>
-            <view class="action-btn reject-btn" bindtap="onRejectFriendRequest" data-id="{{item.id}}">
-              <text>拒绝</text>
+            <view class="request-actions-row">
+              <view class="request-action-btn reject-outline" bindtap="onRejectFriendRequest" data-id="{{item.id}}">
+                <text>拒绝</text>
+              </view>
+              <view class="request-action-btn accept-primary" bindtap="onAcceptFriendRequest" data-id="{{item.id}}">
+                <text>接受</text>
+              </view>
             </view>
           </view>
         </view>
-      </view>
+      </scroll-view>
     </view>
   </view>
   <!-- 好友列表弹窗 -->
   <view class="modal-mask" wx:if="{{showFriendListModal}}" bindtap="onCloseFriendListModal">
-    <view class="modal-content modal-large" catchtap="stopPropagation">
+    <view class="modal-content modal-large modal-friends-sheet" catchtap="stopPropagation">
       <view class="modal-header">
         <text class="modal-title">我的好友</text>
         <view class="modal-close" bindtap="onCloseFriendListModal">✕</view>

@@ -1,5 +1,5 @@
-const BASE_URL = 'https://www.cocolh.top';
-
+const BASE_URL = 'https://www.cocolh.top/api';
+// const BASE_URL = 'http://localhost:3000';
 /** 展示用：把服务端返回的 /uploads 相对路径转为可访问的完整 URL */
 function resolveMediaUrl(url) {
   if (!url) return '/images/avator.png';

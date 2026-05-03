@@ -3,14 +3,65 @@ const api = require('../../utils/api');
 
 let searchTimer = null;
 
+/** 排序权重：兼容接口 camelCase / snake_case */
+function sortOrderVal(o) {
+  if (!o || typeof o !== 'object') return 0;
+  const v = o.sortOrder != null ? o.sortOrder : o.sort_order;
+  if (typeof v === 'number' && !Number.isNaN(v)) return v;
+  if (typeof v === 'string' && v.trim() !== '') {
+    const n = Number(v);
+    if (!Number.isNaN(n)) return n;
+  }
+  return 0;
+}
+
+/** 先按排序权重升序，相同则按 id 升序 */
+function compareSortOrder(a, b) {
+  const d = sortOrderVal(a) - sortOrderVal(b);
+  if (d !== 0) return d;
+  return (Number(a.id) || 0) - (Number(b.id) || 0);
+}
+
+/** 菜品所属分类 id（Relation 场景可能没有顶层 categoryId） */
+function dishCategoryId(dish) {
+  if (!dish || typeof dish !== 'object') return undefined;
+  const cid = dish.categoryId != null ? dish.categoryId : dish.category_id;
+  if (cid != null) return cid;
+  const c = dish.category;
+  return c && typeof c === 'object' ? c.id : undefined;
+}
+
+/** 小程序 <image> 需完整 URL：/uploads 相对路径拼 BASE_URL（见 utils/api.resolveMediaUrl） */
+function dishImageDisplayUrl(dish) {
+  const raw =
+    dish && typeof dish === 'object'
+      ? dish.imageUrl != null
+        ? dish.imageUrl
+        : dish.image_url
+      : '';
+  if (!raw || String(raw).trim() === '') {
+    return '/images/icons/header.jpg';
+  }
+  return api.resolveMediaUrl(String(raw).trim());
+}
+
+/** 分类父 id（兼容 parentId / parent_id） */
+function categoryParentId(c) {
+  if (!c || typeof c !== 'object') return null;
+  const p = c.parentId != null ? c.parentId : c.parent_id;
+  return p != null && p !== '' ? p : null;
+}
+
 /** 将接口返回的一级/二级类目整理为侧边栏分组 + 左侧叶子序列（与菜品列表对齐） */
 function buildSidebarLayout(enabledCats) {
   const enabledIds = new Set(enabledCats.map((c) => c.id));
-  const sortPair = (a, b) => (a.sortOrder ?? a.id) - (b.sortOrder ?? b.id);
 
   const roots = enabledCats
-    .filter((c) => !c.parentId || !enabledIds.has(c.parentId))
-    .sort(sortPair);
+    .filter((c) => {
+      const pid = categoryParentId(c);
+      return !pid || !enabledIds.has(pid);
+    })
+    .sort(compareSortOrder);
 
   const sidebarGroups = [];
   /** @type {{ id: number; categoryId: number; title: string; groupTitle: string }[]} */
@@ -18,8 +69,8 @@ function buildSidebarLayout(enabledCats) {
 
   roots.forEach((root) => {
     const children = enabledCats
-      .filter((c) => c.parentId === root.id)
-      .sort(sortPair);
+      .filter((c) => categoryParentId(c) === root.id)
+      .sort(compareSortOrder);
 
     if (children.length > 0) {
       const tabs = children.map((child) => {
@@ -137,13 +188,14 @@ Page({
           src && Array.isArray(src.dishes)
             ? src.dishes
                 .filter((dish) => dish.status === 1)
+                .sort(compareSortOrder)
                 .map((dish) => ({
                   id: dish.id,
-                  categoryId: dish.categoryId,
+                  categoryId: dishCategoryId(dish),
                   name: dish.name,
                   description: dish.description || '美味佳肴，不容错过',
                   price: dish.price || 0,
-                  imageUrl: dish.imageUrl || '/images/icons/header.jpg'
+                  imageUrl: dishImageDisplayUrl(dish)
                 }))
             : [];
         return { id: index, items };
@@ -320,24 +372,28 @@ Page({
         leafIndexByCat[c.categoryId] = idx;
       });
 
-      const results = dishes
+      const dishesRaw = Array.isArray(dishes) ? dishes : [];
+      const sortedDishes = dishesRaw
         .filter((dish) => dish.status === 1)
-        .map((dish) => {
-          const leafIdx = leafIndexByCat[dish.categoryId];
-          const items = leafIdx !== undefined ? this.data.contentList[leafIdx]?.items || [] : [];
-          const itemIndex = items.findIndex((it) => it.id === dish.id);
-          return {
-            id: dish.id,
-            categoryId: dish.categoryId,
-            name: dish.name,
-            description: dish.description || '美味佳肴，不容错过',
-            price: dish.price || 0,
-            imageUrl: dish.imageUrl || '/images/icons/header.jpg',
-            leafIndex: leafIdx,
-            itemIndex: itemIndex >= 0 ? itemIndex : 0,
-            categoryTitle: this.getCategoryTitleById(dish.categoryId)
-          };
-        });
+        .sort(compareSortOrder);
+
+      const results = sortedDishes.map((dish) => {
+        const catId = dishCategoryId(dish);
+        const leafIdx = leafIndexByCat[catId];
+        const items = leafIdx !== undefined ? this.data.contentList[leafIdx]?.items || [] : [];
+        const itemIndex = items.findIndex((it) => it.id === dish.id);
+        return {
+          id: dish.id,
+          categoryId: catId,
+          name: dish.name,
+          description: dish.description || '美味佳肴，不容错过',
+          price: dish.price || 0,
+          imageUrl: dishImageDisplayUrl(dish),
+          leafIndex: leafIdx,
+          itemIndex: itemIndex >= 0 ? itemIndex : 0,
+          categoryTitle: this.getCategoryTitleById(catId)
+        };
+      });
 
       this.setData({
         isSearching: true,
@@ -429,6 +485,8 @@ Page({
               name: row.name,
               price: row.price,
               imageUrl: row.imageUrl
+                ? api.resolveMediaUrl(String(row.imageUrl))
+                : '/images/icons/header.jpg'
             };
           }
 

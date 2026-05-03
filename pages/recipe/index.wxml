@@ -31,14 +31,38 @@
     </view>
     <view class="main-content" style="height: {{mainContentHeight}}px;">
       <scroll-view class="sidebar-scroll" scroll-y show-scrollbar="{{false}}" wx:if="{{!isSearching}}">
-        <van-sidebar active-key="{{ activeKey }}" bind:change="onChange">
-          <van-sidebar-item wx:for="{{categories}}" wx:key="id" title="{{item.title}}" />
+        <view class="recipe-sidebar-inner">
+          <block wx:for="{{sidebarGroups}}" wx:key="groupKey">
+            <view
+              class="sidebar-leaf sidebar-leaf-toggle"
+              wx:if="{{item.groupTitle}}"
+              hover-class="sidebar-row-hover"
+              hover-stay-time="70"
+              bindtap="onSidebarGroupTap"
+              data-group-key="{{item.groupKey}}"
+            >
+              <text class="sidebar-leaf-text">{{item.groupTitle}}</text>
+              <text wx:if="{{item.expandable}}" class="sidebar-inline-chevron">{{item.expanded ? '▲' : '▼'}}</text>
+            </view>
+            <block wx:if="{{!item.expandable || item.expanded}}">
+              <view
+                wx:for="{{item.tabs}}"
+                wx:for-item="tab"
+                wx:key="flatIndex"
+                class="sidebar-leaf {{activeKey === tab.flatIndex ? 'sidebar-leaf-active' : ''}}"
+                bindtap="onSidebarLeafTap"
+                data-flat-index="{{tab.flatIndex}}"
+              >
+                {{tab.title}}
+              </view>
+            </block>
+          </block>
           <view style="height: 170rpx;"></view>
-        </van-sidebar>
+        </view>
       </scroll-view>
       <scroll-view class="content-scroll" scroll-y>
-        <view class="category-title" wx:if="{{!isSearching}}">
-          {{categories[activeKey].title}}({{contentList[activeKey].items ? contentList[activeKey].items.length : 0}})
+        <view class="category-title" wx:if="{{!isSearching && categories.length && categories[activeKey]}}">
+          {{categories[activeKey].groupTitle ? categories[activeKey].groupTitle + ' · ' + categories[activeKey].title : categories[activeKey].title}}({{contentList[activeKey].items ? contentList[activeKey].items.length : 0}})
         </view>
         <view class="category-title" wx:if="{{isSearching}}">搜索结果({{searchResults.length}})</view>
         <view class="content-area">
@@ -54,7 +78,7 @@
                     <text class="paw-icon">💰</text>
                     <text class="price-num">{{item.price}}</text>
                   </view>
-                  <image class="item-add" id="add-search-{{index}}" src="/images/icons/add.png" mode="aspectFit" bindtap="onAddSearchResultToCart" data-index="{{index}}" data-category-index="{{item.categoryIndex}}" data-item-index="{{item.itemIndex}}" />
+                  <image class="item-add" id="add-search-{{index}}" src="/images/icons/add.png" mode="aspectFit" bindtap="onAddSearchResultToCart" data-index="{{index}}" data-leaf-index="{{item.leafIndex}}" />
                 </view>
               </view>
             </view>

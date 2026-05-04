@@ -231,6 +231,7 @@
   width: 200rpx;
   height: 100%;
   flex-shrink: 0;
+  background-color: #f7f8fa;
 }
 
 .sidebar-scroll ::-webkit-scrollbar {
@@ -240,17 +241,50 @@
   background: transparent;
 }
 
-.sidebar-scroll .van-sidebar {
-  width: 200rpx !important;  /* 设置你想要的宽度 */
+.recipe-sidebar-inner {
+  min-height: 100%;
 }
 
-/* 如果需要调整菜单项宽度 */
-.sidebar-scroll .van-sidebar-item {
-  width: 200rpx !important;
+/* 一级、二级侧边项共用基底 */
+.sidebar-leaf {
+  padding: 28rpx 12rpx;
+  font-size: 26rpx;
+  color: #666;
+  text-align: center;
+  border-left: 6rpx solid transparent;
+  background-color: #f7f8fa;
+  box-sizing: border-box;
 }
 
-.sidebar-scroll .van-sidebar-item--selected {
-  border-color: #f3ca7e !important;
+/* 一级可折叠分组：与同列二级一致，仅用 flex 排版标题 + 箭头 */
+.sidebar-leaf-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+}
+
+.sidebar-leaf-text {
+  flex: 1;
+  text-align: center;
+}
+
+.sidebar-inline-chevron {
+  flex-shrink: 0;
+  font-size: 22rpx;
+  color: #999;
+  line-height: 1;
+}
+
+.sidebar-row-hover {
+  opacity: 0.88;
+}
+
+.sidebar-leaf-active {
+  background-color: #fff;
+  color: #6b5637;
+  font-weight: 700;
+  border-left-color: #f3ca7e;
 }
 
 .content-scroll {

@@ -62,9 +62,9 @@ function buildUrl(url, params) {
 function request(options) {
   return new Promise((resolve, reject) => {
     const token = wx.getStorageSync('token');
-    
+
     const finalUrl = buildUrl(`${BASE_URL}${options.url}`, options.params);
-    
+
     wx.request({
       url: finalUrl,
       method: options.method || 'GET',

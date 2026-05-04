@@ -10,6 +10,7 @@ page {
 .profile-section {
   display: flex;
   align-items: center;
+  justify-content: center; /* 添加这一行，实现水平居中 */
   background: linear-gradient(135deg, #fff5eb 0%, #fef9f3 100%);
   border-radius: 32rpx;
   padding: 40rpx;
@@ -18,16 +19,34 @@ page {
   box-shadow: 0 8rpx 24rpx rgba(139, 111, 71, 0.1);
 }
 
+.profile-info {
+  flex: 1;
+  /* 移除 min-width: 0; 避免内容被压缩 */
+  min-width: auto; 
+}
+
 .profile-dog {
   width: 120rpx;
   height: 120rpx;
   border-radius: 50%;
   border: 4rpx solid #f5e6d8;
   margin-right: 24rpx;
+  flex-shrink: 0;
+  display: block;
+  box-sizing: border-box;
   animation: profileDogWave 3s ease-in-out infinite;
 }
 
 .avatar-btn {
+  width: 120rpx;
+  height: 120rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 50%;
   background: transparent;
   border: none;
   padding: 0;
@@ -37,6 +56,10 @@ page {
 
 .avatar-btn::after {
   border: none;
+}
+
+.avatar-btn .profile-dog {
+  margin-right: 0;
 }
 
 .avatar-btn:active {
@@ -51,7 +74,9 @@ page {
 }
 
 .wx-login-submit-btn {
-  width: 100%;
+  width: 90%;
+  max-width: 100%;   /* 确保不超出父容器 */
+  box-sizing: border-box;
   font-size: 28rpx;
   padding: 20rpx;
   background: linear-gradient(135deg, #e8c9a8 0%, #d4a574 100%);

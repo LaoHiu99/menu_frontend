@@ -3,10 +3,121 @@ const api = require('../../utils/api');
 
 let searchTimer = null;
 
+/** 排序权重：兼容接口 camelCase / snake_case */
+function sortOrderVal(o) {
+  if (!o || typeof o !== 'object') return 0;
+  const v = o.sortOrder != null ? o.sortOrder : o.sort_order;
+  if (typeof v === 'number' && !Number.isNaN(v)) return v;
+  if (typeof v === 'string' && v.trim() !== '') {
+    const n = Number(v);
+    if (!Number.isNaN(n)) return n;
+  }
+  return 0;
+}
+
+/** 先按排序权重升序，相同则按 id 升序 */
+function compareSortOrder(a, b) {
+  const d = sortOrderVal(a) - sortOrderVal(b);
+  if (d !== 0) return d;
+  return (Number(a.id) || 0) - (Number(b.id) || 0);
+}
+
+/** 菜品所属分类 id（Relation 场景可能没有顶层 categoryId） */
+function dishCategoryId(dish) {
+  if (!dish || typeof dish !== 'object') return undefined;
+  const cid = dish.categoryId != null ? dish.categoryId : dish.category_id;
+  if (cid != null) return cid;
+  const c = dish.category;
+  return c && typeof c === 'object' ? c.id : undefined;
+}
+
+/** 小程序 <image> 需完整 URL：/uploads 相对路径拼 BASE_URL（见 utils/api.resolveMediaUrl） */
+function dishImageDisplayUrl(dish) {
+  const raw =
+    dish && typeof dish === 'object'
+      ? dish.imageUrl != null
+        ? dish.imageUrl
+        : dish.image_url
+      : '';
+  if (!raw || String(raw).trim() === '') {
+    return '/images/icons/header.jpg';
+  }
+  return api.resolveMediaUrl(String(raw).trim());
+}
+
+/** 分类父 id（兼容 parentId / parent_id） */
+function categoryParentId(c) {
+  if (!c || typeof c !== 'object') return null;
+  const p = c.parentId != null ? c.parentId : c.parent_id;
+  return p != null && p !== '' ? p : null;
+}
+
+/** 将接口返回的一级/二级类目整理为侧边栏分组 + 左侧叶子序列（与菜品列表对齐） */
+function buildSidebarLayout(enabledCats) {
+  const enabledIds = new Set(enabledCats.map((c) => c.id));
+
+  const roots = enabledCats
+    .filter((c) => {
+      const pid = categoryParentId(c);
+      return !pid || !enabledIds.has(pid);
+    })
+    .sort(compareSortOrder);
+
+  const sidebarGroups = [];
+  /** @type {{ id: number; categoryId: number; title: string; groupTitle: string }[]} */
+  const formattedCategories = [];
+
+  roots.forEach((root) => {
+    const children = enabledCats
+      .filter((c) => categoryParentId(c) === root.id)
+      .sort(compareSortOrder);
+
+    if (children.length > 0) {
+      const tabs = children.map((child) => {
+        const flatIndex = formattedCategories.length;
+        formattedCategories.push({
+          id: flatIndex,
+          categoryId: child.id,
+          title: child.title,
+          groupTitle: root.title
+        });
+        return { title: child.title, flatIndex };
+      });
+      sidebarGroups.push({
+        groupTitle: root.title,
+        tabs,
+        groupKey: `group-${root.id}`,
+        expandable: true,
+        expanded: true
+      });
+    } else {
+      const flatIndex = formattedCategories.length;
+      formattedCategories.push({
+        id: flatIndex,
+        categoryId: root.id,
+        title: root.title,
+        groupTitle: ''
+      });
+      sidebarGroups.push({
+        groupTitle: '',
+        tabs: [{ title: root.title, flatIndex }],
+        groupKey: `group-${root.id}`,
+        expandable: false,
+        expanded: true
+      });
+    }
+  });
+
+  return { sidebarGroups, formattedCategories };
+}
+
 Page({
   data: {
     showCartPopup: false,
     activeKey: 0,
+    /** 左侧多级分组：[{ groupTitle, tabs:[{title, flatIndex}]}] */
+    sidebarGroups: [],
+    searchLoading: false,
     showFlyBall: false,
     flyAnimation: null,
     flyBallStartX: 0,
@@ -20,10 +131,29 @@ Page({
     contentList: [],
     loading: false
   },
-  onChange(event) {
+  onSidebarLeafTap(e) {
+    const flatIndex = Number(e.currentTarget.dataset.flatIndex);
+    if (Number.isNaN(flatIndex)) {
+      return;
+    }
     this.setData({
-      activeKey: event.detail
+      activeKey: flatIndex
     });
+  },
+
+  /** 一级分组（如奶茶）收起 / 展开子品牌 */
+  onSidebarGroupTap(e) {
+    const groupKey = e.currentTarget.dataset.groupKey;
+    if (!groupKey) {
+      return;
+    }
+    const sidebarGroups = this.data.sidebarGroups.map((g) => {
+      if (g.groupKey !== groupKey || !g.expandable) {
+        return g;
+      }
+      return { ...g, expanded: !g.expanded };
+    });
+    this.setData({ sidebarGroups });
   },
   onLoad() {
     console.log('菜谱页面加载');
@@ -49,31 +179,30 @@ Page({
     try {
       const categories = await api.get('/category');
       
-      const formattedCategories = categories
-        .filter(cat => cat.status === 1)
-        .map((cat, index) => ({
-          id: index,
-          categoryId: cat.id,
-          title: cat.title
-        }));
-      
-      const formattedContentList = categories
-        .filter(cat => cat.status === 1)
-        .map((cat, index) => ({
-          id: index,
-          items: (cat.dishes || [])
-            .filter(dish => dish.status === 1)
-            .map(dish => ({
-              id: dish.id,
-              categoryId: dish.categoryId,
-              name: dish.name,
-              description: dish.description || '美味佳肴，不容错过',
-              price: dish.price || 0,
-              imageUrl: dish.imageUrl || '/images/icons/header.jpg'
-            }))
-        }));
+      const enabled = categories.filter((cat) => cat.status === 1);
+      const { sidebarGroups, formattedCategories } = buildSidebarLayout(enabled);
+
+      const formattedContentList = formattedCategories.map((leaf, index) => {
+        const src = enabled.find((c) => c.id === leaf.categoryId);
+        const items =
+          src && Array.isArray(src.dishes)
+            ? src.dishes
+                .filter((dish) => dish.status === 1)
+                .sort(compareSortOrder)
+                .map((dish) => ({
+                  id: dish.id,
+                  categoryId: dishCategoryId(dish),
+                  name: dish.name,
+                  description: dish.description || '美味佳肴，不容错过',
+                  price: dish.price || 0,
+                  imageUrl: dishImageDisplayUrl(dish)
+                }))
+            : [];
+        return { id: index, items };
+      });
       
       this.setData({
+        sidebarGroups,
         categories: formattedCategories,
         contentList: formattedContentList,
         activeKey: 0,
@@ -238,19 +367,33 @@ Page({
     try {
       const dishes = await api.get('/dish/search', { keyword });
       
-      const results = dishes
-        .filter(dish => dish.status === 1)
-        .map((dish, index) => ({
+      const leafIndexByCat = {};
+      (this.data.categories || []).forEach((c, idx) => {
+        leafIndexByCat[c.categoryId] = idx;
+      });
+
+      const dishesRaw = Array.isArray(dishes) ? dishes : [];
+      const sortedDishes = dishesRaw
+        .filter((dish) => dish.status === 1)
+        .sort(compareSortOrder);
+
+      const results = sortedDishes.map((dish) => {
+        const catId = dishCategoryId(dish);
+        const leafIdx = leafIndexByCat[catId];
+        const items = leafIdx !== undefined ? this.data.contentList[leafIdx]?.items || [] : [];
+        const itemIndex = items.findIndex((it) => it.id === dish.id);
+        return {
           id: dish.id,
-          categoryId: dish.categoryId,
+          categoryId: catId,
           name: dish.name,
           description: dish.description || '美味佳肴，不容错过',
           price: dish.price || 0,
-          imageUrl: dish.imageUrl || '/images/icons/header.jpg',
-          categoryIndex: dish.categoryId || 0,
-          itemIndex: index,
-          categoryTitle: this.getCategoryTitleById(dish.categoryId)
-        }));
+          imageUrl: dishImageDisplayUrl(dish),
+          leafIndex: leafIdx,
+          itemIndex: itemIndex >= 0 ? itemIndex : 0,
+          categoryTitle: this.getCategoryTitleById(catId)
+        };
+      });
 
       this.setData({
         isSearching: true,
@@ -268,8 +411,11 @@ Page({
   },
 
   getCategoryTitleById(categoryId) {
-    const category = this.data.categories.find(cat => cat.categoryId === categoryId);
-    return category ? category.title : '其他';
+    const category = this.data.categories.find((cat) => cat.categoryId === categoryId);
+    if (!category) {
+      return '其他';
+    }
+    return category.groupTitle ? `${category.groupTitle} · ${category.title}` : category.title;
   },
 
   onClearSearch() {
@@ -282,7 +428,7 @@ Page({
   },
 
   onAddSearchResultToCart(e) {
-    const { index, categoryIndex, itemIndex } = e.currentTarget.dataset;
+    const { index, leafIndex } = e.currentTarget.dataset;
     const addId = `#add-search-${index}`;
     const query = wx.createSelectorQuery();
     
@@ -322,22 +468,41 @@ Page({
         
         setTimeout(() => {
           this.setData({ showFlyBall: false });
-          
-          const item = this.data.contentList[categoryIndex].items[itemIndex];
-          
-          const existingItem = this.data.cartList.find(cartItem => cartItem.id === item.id);
+
+          const row = this.data.searchResults[index];
+          if (!row) {
+            return;
+          }
+          const li = leafIndex !== undefined && leafIndex !== '' ? Number(leafIndex) : NaN;
+          let resolvedItem = null;
+          if (!Number.isNaN(li) && this.data.contentList[li]) {
+            resolvedItem =
+              this.data.contentList[li].items.find((it) => it.id === row.id) || null;
+          }
+          if (!resolvedItem) {
+            resolvedItem = {
+              id: row.id,
+              name: row.name,
+              price: row.price,
+              imageUrl: row.imageUrl
+                ? api.resolveMediaUrl(String(row.imageUrl))
+                : '/images/icons/header.jpg'
+            };
+          }
+
+          const existingItem = this.data.cartList.find((cartItem) => cartItem.id === resolvedItem.id);
           if (existingItem) {
-            const cartList = this.data.cartList.map(cartItem => 
-              cartItem.id === item.id ? { ...cartItem, count: cartItem.count + 1 } : cartItem
+            const cartList = this.data.cartList.map((cartItem) =>
+              cartItem.id === resolvedItem.id ? { ...cartItem, count: cartItem.count + 1 } : cartItem
             );
             this.setData({ cartList });
           } else {
             const newItem = {
-              id: item.id,
-              name: item.name,
-              price: item.price,
+              id: resolvedItem.id,
+              name: resolvedItem.name,
+              price: resolvedItem.price,
               count: 1,
-              image: item.imageUrl || '/images/icons/header.jpg'
+              image: resolvedItem.imageUrl || '/images/icons/header.jpg'
             };
             const cartList = [...this.data.cartList, newItem];
             this.setData({ cartList });
